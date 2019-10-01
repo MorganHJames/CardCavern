@@ -334,8 +334,8 @@ MonoBehaviour:
   iceTile: {fileID: 11400000, guid: 832298ff1c005fc4484d52c3287d6271, type: 2}
   desertTile: {fileID: 11400000, guid: 84459781ece53cc459d04fbcb13fe085, type: 2}
   collider: {fileID: 11400000, guid: c327817547c005c42924877012b8c8b9, type: 2}
-  islandWidth: 15
-  islandHeight: 15
+  islandWidth: 11
+  islandHeight: 11
   landTileMap: {fileID: 1564115453}
   collisionTileMap: {fileID: 360370499}
 --- !u!1 &1441601833
@@ -607,8 +607,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2100490175}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 2.2990115, y: -6.8146815, z: 0.11396219}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 2.53, y: -5.47, z: 0.11396219}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1513711210}
