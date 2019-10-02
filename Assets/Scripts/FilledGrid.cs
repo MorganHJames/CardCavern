@@ -1,15 +1,23 @@
-﻿using UnityEngine;
+﻿////////////////////////////////////////////////////////////
+// File: FilledGrid.cs
+// Author: Morgan Henry James
+// Date Created: 30-09-2019
+// Brief: Allows for the creation of a filled grid.
+//////////////////////////////////////////////////////////// 
 
+/// <summary>
+/// This filled grid class is used to produce a grid of 1's and 0's.
+/// The distribution is random but then smoothed to create organic looking grids.
+/// The grids are then used as the basses for each room in the terrain generation.
+/// </summary>
 public class FilledGrid
 {
 	#region Variables
-	#region Private
-	#endregion
 	#region Public
 	/// <summary>
 	/// A grid of 1's and 0's.
 	/// </summary>
-	public int[,] grid { get; private set; }
+	public int[,] Grid { get; private set; }
 	#endregion
 	#endregion
 
@@ -25,7 +33,7 @@ public class FilledGrid
 	/// <param name="smoothIterations">How many smooth passes to call.</param>
 	private void GenerateGrid(string seed, int width, int height, int fillPercent, int smoothIterations)
 	{
-		grid = new int[width, height];//Create a new map.
+		Grid = new int[width, height];//Create a new map.
 		RandomFillGrid(seed, width, height, fillPercent);//Fill the map
 		SmoothGrid(width, height, smoothIterations);//Smooth the map
 	}
@@ -39,11 +47,15 @@ public class FilledGrid
 	/// <param name="fillPercent">How much to fill the grid by.</param>
 	private void RandomFillGrid(string seed, int width, int height, int fillPercent)
 	{
-		System.Random pseudoRandom = new System.Random(seed.GetHashCode());
+		System.Random pseudoRandom = new System.Random(seed.GetHashCode());//Seed the random system.
 
 		for (int x = 0; x < width; x++)
+		{
 			for (int y = 0; y < height; y++)
-				grid[x, y] = (pseudoRandom.Next(0, 100) < fillPercent) ? 1 : 0;
+			{
+				Grid[x, y] = (pseudoRandom.Next(0, 100) < fillPercent) ? 1 : 0;//Sets each cell in the grid either on or off randomly.
+			}
+		}
 	}
 
 	/// <summary>
@@ -63,9 +75,9 @@ public class FilledGrid
 					int neighbourWallTiles = GetSurroundingWallCount(x, y, width, height);
 
 					if (neighbourWallTiles > 4)
-						grid[x, y] = 1;
+						Grid[x, y] = 1;
 					else if (neighbourWallTiles < 4)
-						grid[x, y] = 0;
+						Grid[x, y] = 0;
 				}
 			}
 		}
@@ -88,19 +100,27 @@ public class FilledGrid
 				if (neighbourX >= 0 && neighbourX < width && neighbourY >= 0 && neighbourY < height)
 				{
 					if (neighbourX != gridX || neighbourY != gridY)
-						wallCount += grid[neighbourX, neighbourY];
+					{
+						wallCount += Grid[neighbourX, neighbourY];
+					}
 				}
 				else
+				{
 					wallCount++;
+				}
 			}
 		}
 
-		if (gridX == 0 && gridY == 0 || gridX == width - 1 && gridY == width - 1 || gridX == width - 1 && gridY == 0 || gridX == 0 && gridY == width - 1)
-			wallCount -= 1;
+		if ((gridX == 0 && gridY == 0) || (gridX == width - 1 && gridY == width - 1)
+			|| (gridX == width - 1 && gridY == 0) || (gridX == 0 && gridY == width - 1))
+		{
+			wallCount--;
+		}
 
 		return wallCount;
 	}
 	#endregion
+
 	#region Public
 	/// <summary>
 	/// The constructor for the grid.
