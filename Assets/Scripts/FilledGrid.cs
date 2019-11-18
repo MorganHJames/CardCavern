@@ -17,7 +17,7 @@ public class FilledGrid
 	/// <summary>
 	/// A grid of 1's and 0's.
 	/// </summary>
-	public int[,] Grid { get; private set; }
+	public int[,] Grid;
 	#endregion
 	#endregion
 

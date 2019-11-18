@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using RoyT.AStar;
 
 /// <summary>
 /// Used to generate islands for specific room types for dungeon generation use.
@@ -18,22 +19,16 @@ public class TerrainGenerator : MonoBehaviour
 	#region Variables
 	#region Private
 	/// <summary>
-	/// The Terrain Tile for the normal land.
+	/// The player prefab.
 	/// </summary>
-	[Tooltip("The Terrain Tile for the normal land.")]
-	[SerializeField] private TerrainTile normalTile;
+	[Tooltip("The player prefab.")]
+	[SerializeField] private Transform player;
 
 	/// <summary>
-	/// The Terrain Tile for the normal land.
+	/// The Terrain Tile for the cavern land.
 	/// </summary>
-	[Tooltip("The Terrain Tile for the ice land.")]
-	[SerializeField] private TerrainTile iceTile;
-
-	/// <summary>
-	/// The Terrain Tile for the normal land.
-	/// </summary>
-	[Tooltip("The Terrain Tile for the desert land.")]
-	[SerializeField] private TerrainTile desertTile;
+	[Tooltip("The Terrain Tile for the cabern land.")]
+	[SerializeField] private TerrainTile cavernTile;
 
 	/// <summary>
 	/// The collider Tile.
@@ -63,6 +58,15 @@ public class TerrainGenerator : MonoBehaviour
 	/// A list of all the currently spawned islands for easy lookup.
 	/// </summary>
 	private List<SpawnedIsland> SpawnedIslands = new List<SpawnedIsland>();
+
+	/// <summary>
+	/// Grid of all islands.
+	/// </summary>
+	public static RoyT.AStar.Grid grid;
+
+	private static Vector3 bottomLeftCellPos;
+
+	private static float cellSpacing;
 	#endregion
 	#endregion
 
@@ -73,7 +77,130 @@ public class TerrainGenerator : MonoBehaviour
 	/// </summary>
 	private void Start()
 	{
-		SpawnIsland(0, 0, 35, 1, normalTile, TerrainType.TRLB);
+		Invoke("SpawnLevel", 0.5f);
+	}
+
+	/// <summary>
+	/// Spawns the terrain.
+	/// </summary>
+	private void SpawnLevel()
+	{
+		SpawnIsland(0, 0, 50, 1, cavernTile, TerrainType.TRLB);
+
+		SetupFullGrid();
+
+		SpawnPlayer();
+	}
+
+	/// <summary>
+	/// Spawns in the player in the closest tile to the bottom left as possible.
+	/// </summary>
+	private void SpawnPlayer()
+	{
+		Transform playerEntity = Instantiate(player);
+		playerEntity.position = new Vector3(2.79f, -6.5f, 0f);
+		playerEntity.GetComponent<PlayerController>().MoveToTile(WorldToGrid(playerEntity.position));
+	}
+
+	/// <summary>
+	/// Puts all of the grids from all the islands together into one big grid used for path finding.
+	/// </summary>
+	private void SetupFullGrid()
+	{
+		//Finds out the farthest points of the grid to see how big it needs to be.
+		int xMin = SpawnedIslands[0].coords.x;
+		int xMax = SpawnedIslands[0].coords.x;
+		int yMin = SpawnedIslands[0].coords.y;
+		int yMax = SpawnedIslands[0].coords.y;
+
+		foreach (SpawnedIsland island in SpawnedIslands)
+		{
+			xMin = Math.Min(xMin, island.coords.x);
+			xMax = Math.Max(xMax, island.coords.x);
+			yMin = Math.Min(yMin, island.coords.y);
+			yMax = Math.Max(yMax, island.coords.y);
+		}
+
+		//No clue as why I need to do this. :/
+		xMax++;
+		yMax++;
+		xMin--;
+		yMin--;
+		xMax++;
+		yMax++;
+		int gridWidth = xMax - xMin;
+		int gridHeight = yMax - yMin;
+
+		//Pathfinding grid
+		grid = new RoyT.AStar.Grid((gridWidth + 1) * islandWidth, (gridHeight + 1) * islandHeight, 1.0f);
+
+		//These allow the conversion from tilemaps to the new grid.
+		int translateX = 0 - xMin + 1;
+		int translateY = 0 - yMin + 1;
+
+		//Adds the intraversible terrain to the grid.
+		for (int xIslandPos = xMin; xIslandPos < xMax; xIslandPos++)
+		{
+			for (int yIslandPos = yMin; yIslandPos < yMax; yIslandPos++)
+			{
+				for (int x = 0; x < islandWidth; x++)
+				{
+					for (int y = 0; y < islandHeight; y++)
+					{
+						if (!landTileMap.HasTile(new Vector3Int(x + (islandWidth * xIslandPos) - (islandWidth / 2), y + (islandHeight * yIslandPos) - (islandHeight / 2), 0)) || collisionTileMap.HasTile(new Vector3Int(x + (islandWidth * xIslandPos) - (islandWidth / 2), y + (islandHeight * yIslandPos) - (islandHeight / 2), 0)))
+						{
+							//Blocks the cell
+							grid.BlockCell(new Position(x + (islandWidth * (xIslandPos + translateX)) - (islandWidth / 2), y + (islandHeight * (yIslandPos + translateY)) - (islandHeight / 2)));
+						}
+					}
+				}
+			}
+		}
+
+		//Needed for the grid to world conversions.
+		bottomLeftCellPos = landTileMap.CellToWorld(new Vector3Int(0 + (islandWidth * xMin) - (islandWidth / 2), 0 + (islandHeight * yMin) - (islandHeight / 2), 0));
+		Vector3 bottemLeftPlusOne = landTileMap.CellToWorld(new Vector3Int(1 + (islandWidth * xMin) - (islandWidth / 2), 0 + (islandHeight * yMin) - (islandHeight / 2), 0));
+
+		cellSpacing = bottemLeftPlusOne.x - bottomLeftCellPos.x;
+
+		//For Debugging the full grid
+		//for (int i = 0; i < (gridWidth + 1) * islandWidth; i++)
+		//{
+		//	for (int ii = 0; ii < (gridHeight + 1) * islandHeight; ii++)
+		//	{
+		//		if (TerrainGenerator.grid.GetCellCost(new Position(i, ii)) > 1)
+		//		{
+		//			GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+		//			cube.transform.position = GridToWorld(new Position(i, ii));
+		//		}
+		//		else
+		//		{
+		//			GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+		//			cube.transform.position = GridToWorld(new Position(i, ii));
+		//			cube.GetComponent<Renderer>().material.color = new Color(0, 1, 0, 1);
+		//		}
+		//	}
+		//}
+	}
+
+	/// <summary>
+	/// Converts a grid position to a world position.
+	/// </summary>
+	/// <param name="position">The grid position to convert.</param>
+	/// <returns>The world position.</returns>
+	public static Vector3 GridToWorld(Position position)
+	{
+		return new Vector3(bottomLeftCellPos.x + ((position.X - 6f) * cellSpacing) + 0.5f, bottomLeftCellPos.y + ((position.Y - 6f) * cellSpacing) + 0.5f, 0);
+	}
+
+	/// <summary>
+	/// Converts a world position to a grid position.
+	/// </summary>
+	/// <param name="position">The world position to convert.</param>
+	/// <returns>The grid position.</returns>
+	public static Position WorldToGrid(Vector3 position)
+	{
+		return new Position((int)(((position.x - bottomLeftCellPos.x + 6f) / cellSpacing) - 0.5f) + 1, (int)(((position.y - bottomLeftCellPos.y + 6f) / cellSpacing) - 0.5f) + 1);
 	}
 
 	/// <summary>
@@ -90,125 +217,10 @@ public class TerrainGenerator : MonoBehaviour
 		//Create an island.
 		CreateIsland(xPos, yPos, fillAmount, smoothPasses, terrainTile, terrainType);
 
-		bool isCorrectIsland = true;//Indicates if the island is of the correct type.
+		//The next part checks what islands the just spawned island needs to be spawned and then does so.
 
-		//Check if the island has the correct entrances in accordance to it's terrain type.
-		//If it doesn't meet the requirements re-spawn the island until it does.
-		switch (terrainType)
-		{
-			case TerrainType.T:
-				if (!landTileMap.HasTile(new Vector3Int(islandWidth * xPos, (islandHeight * yPos) + (islandHeight / 2), 0)) || landTileMap.GetTile(new Vector3Int(islandWidth * xPos, (islandHeight * yPos) + (islandHeight / 2), 0)).name.Contains("End"))
-				{
-					RespawnIsland(xPos, yPos, fillAmount, smoothPasses, terrainTile, terrainType);
-					isCorrectIsland = false;
-				}
-				break;
-			case TerrainType.R:
-				if (!landTileMap.HasTile(new Vector3Int((islandWidth * xPos) + (islandWidth / 2), islandHeight * yPos, 0)) || landTileMap.GetTile(new Vector3Int((islandWidth * xPos) + (islandWidth / 2), islandHeight * yPos, 0)).name.Contains("End"))
-				{
-					RespawnIsland(xPos, yPos, fillAmount, smoothPasses, terrainTile, terrainType);
-					isCorrectIsland = false;
-				}
-				break;
-			case TerrainType.L:
-				if (!landTileMap.HasTile(new Vector3Int((islandWidth * xPos) - (islandWidth / 2), islandHeight * yPos, 0)) || landTileMap.GetTile(new Vector3Int((islandWidth * xPos) - (islandWidth / 2), islandHeight * yPos, 0)).name.Contains("End"))
-				{
-					RespawnIsland(xPos, yPos, fillAmount, smoothPasses, terrainTile, terrainType);
-					isCorrectIsland = false;
-				}
-				break;
-			case TerrainType.B:
-				if (!landTileMap.HasTile(new Vector3Int(islandWidth * xPos, (islandHeight * yPos) - (islandHeight / 2), 0)) || landTileMap.GetTile(new Vector3Int(islandWidth * xPos, (islandHeight * yPos) - (islandHeight / 2), 0)).name.Contains("End"))
-				{
-					RespawnIsland(xPos, yPos, fillAmount, smoothPasses, terrainTile, terrainType);
-					isCorrectIsland = false;
-				}
-				break;
-			case TerrainType.TR:
-				if (!landTileMap.HasTile(new Vector3Int(islandWidth * xPos, (islandHeight * yPos) + (islandHeight / 2), 0)) || landTileMap.GetTile(new Vector3Int(islandWidth * xPos, (islandHeight * yPos) + (islandHeight / 2), 0)).name.Contains("End") || !landTileMap.HasTile(new Vector3Int((islandWidth * xPos) + (islandWidth / 2), islandHeight * yPos, 0)) || landTileMap.GetTile(new Vector3Int((islandWidth * xPos) + (islandWidth / 2), islandHeight * yPos, 0)).name.Contains("End"))
-				{
-					RespawnIsland(xPos, yPos, fillAmount, smoothPasses, terrainTile, terrainType);
-					isCorrectIsland = false;
-				}
-				break;
-			case TerrainType.TL:
-				if (!landTileMap.HasTile(new Vector3Int(islandWidth * xPos, (islandHeight * yPos) + (islandHeight / 2), 0)) || landTileMap.GetTile(new Vector3Int(islandWidth * xPos, (islandHeight * yPos) + (islandHeight / 2), 0)).name.Contains("End") || !landTileMap.HasTile(new Vector3Int((islandWidth * xPos) - (islandWidth / 2), islandHeight * yPos, 0)) || landTileMap.GetTile(new Vector3Int((islandWidth * xPos) - (islandWidth / 2), islandHeight * yPos, 0)).name.Contains("End"))
-				{
-					RespawnIsland(xPos, yPos, fillAmount, smoothPasses, terrainTile, terrainType);
-					isCorrectIsland = false;
-				}
-				break;
-			case TerrainType.TB:
-				if (!landTileMap.HasTile(new Vector3Int(islandWidth * xPos, (islandHeight * yPos) + (islandHeight / 2), 0)) || landTileMap.GetTile(new Vector3Int(islandWidth * xPos, (islandHeight * yPos) + (islandHeight / 2), 0)).name.Contains("End") || !landTileMap.HasTile(new Vector3Int(islandWidth * xPos, (islandHeight * yPos) - (islandHeight / 2), 0)) || landTileMap.GetTile(new Vector3Int(islandWidth * xPos, (islandHeight * yPos) - (islandHeight / 2), 0)).name.Contains("End"))
-				{
-					RespawnIsland(xPos, yPos, fillAmount, smoothPasses, terrainTile, terrainType);
-					isCorrectIsland = false;
-				}
-				break;
-			case TerrainType.RL:
-				if (!landTileMap.HasTile(new Vector3Int((islandWidth * xPos) + (islandWidth / 2), islandHeight * yPos, 0)) || landTileMap.GetTile(new Vector3Int((islandWidth * xPos) + (islandWidth / 2), islandHeight * yPos, 0)).name.Contains("End") || !landTileMap.HasTile(new Vector3Int((islandWidth * xPos) - (islandWidth / 2), islandHeight * yPos, 0)) || landTileMap.GetTile(new Vector3Int((islandWidth * xPos) - (islandWidth / 2), islandHeight * yPos, 0)).name.Contains("End"))
-				{
-					RespawnIsland(xPos, yPos, fillAmount, smoothPasses, terrainTile, terrainType);
-					isCorrectIsland = false;
-				}
-				break;
-			case TerrainType.RB:
-				if (!landTileMap.HasTile(new Vector3Int((islandWidth * xPos) + (islandWidth / 2), islandHeight * yPos, 0)) || landTileMap.GetTile(new Vector3Int((islandWidth * xPos) + (islandWidth / 2), islandHeight * yPos, 0)).name.Contains("End") || !landTileMap.HasTile(new Vector3Int(islandWidth * xPos, (islandHeight * yPos) - (islandHeight / 2), 0)) || landTileMap.GetTile(new Vector3Int(islandWidth * xPos, (islandHeight * yPos) - (islandHeight / 2), 0)).name.Contains("End"))
-				{
-					RespawnIsland(xPos, yPos, fillAmount, smoothPasses, terrainTile, terrainType);
-					isCorrectIsland = false;
-				}
-				break;
-			case TerrainType.LB:
-				if (!landTileMap.HasTile(new Vector3Int((islandWidth * xPos) - (islandWidth / 2), islandHeight * yPos, 0)) || landTileMap.GetTile(new Vector3Int((islandWidth * xPos) - (islandWidth / 2), islandHeight * yPos, 0)).name.Contains("End") || !landTileMap.HasTile(new Vector3Int(islandWidth * xPos, (islandHeight * yPos) - (islandHeight / 2), 0)) || landTileMap.GetTile(new Vector3Int(islandWidth * xPos, (islandHeight * yPos) - (islandHeight / 2), 0)).name.Contains("End"))
-				{
-					RespawnIsland(xPos, yPos, fillAmount, smoothPasses, terrainTile, terrainType);
-					isCorrectIsland = false;
-				}
-				break;
-			case TerrainType.TRL:
-				if (!landTileMap.HasTile(new Vector3Int(islandWidth * xPos, (islandHeight * yPos) + (islandHeight / 2), 0)) || landTileMap.GetTile(new Vector3Int(islandWidth * xPos, (islandHeight * yPos) + (islandHeight / 2), 0)).name.Contains("End") || !landTileMap.HasTile(new Vector3Int((islandWidth * xPos) + (islandWidth / 2), islandHeight * yPos, 0)) || landTileMap.GetTile(new Vector3Int((islandWidth * xPos) + (islandWidth / 2), islandHeight * yPos, 0)).name.Contains("End") || !landTileMap.HasTile(new Vector3Int((islandWidth * xPos) - (islandWidth / 2), islandHeight * yPos, 0)) || landTileMap.GetTile(new Vector3Int((islandWidth * xPos) - (islandWidth / 2), islandHeight * yPos, 0)).name.Contains("End"))
-				{
-					RespawnIsland(xPos, yPos, fillAmount, smoothPasses, terrainTile, terrainType);
-					isCorrectIsland = false;
-				}
-				break;
-			case TerrainType.TRB:
-				if (!landTileMap.HasTile(new Vector3Int(islandWidth * xPos, (islandHeight * yPos) + (islandHeight / 2), 0)) || landTileMap.GetTile(new Vector3Int(islandWidth * xPos, (islandHeight * yPos) + (islandHeight / 2), 0)).name.Contains("End") || !landTileMap.HasTile(new Vector3Int((islandWidth * xPos) + (islandWidth / 2), islandHeight * yPos, 0)) || landTileMap.GetTile(new Vector3Int((islandWidth * xPos) + (islandWidth / 2), islandHeight * yPos, 0)).name.Contains("End") || !landTileMap.HasTile(new Vector3Int(islandWidth * xPos, (islandHeight * yPos) - (islandHeight / 2), 0)) || landTileMap.GetTile(new Vector3Int(islandWidth * xPos, (islandHeight * yPos) - (islandHeight / 2), 0)).name.Contains("End"))
-				{
-					RespawnIsland(xPos, yPos, fillAmount, smoothPasses, terrainTile, terrainType);
-					isCorrectIsland = false;
-				}
-				break;
-			case TerrainType.TLB:
-				if (!landTileMap.HasTile(new Vector3Int(islandWidth * xPos, (islandHeight * yPos) + (islandHeight / 2), 0)) || landTileMap.GetTile(new Vector3Int(islandWidth * xPos, (islandHeight * yPos) + (islandHeight / 2), 0)).name.Contains("End") || !landTileMap.HasTile(new Vector3Int((islandWidth * xPos) - (islandWidth / 2), islandHeight * yPos, 0)) || landTileMap.GetTile(new Vector3Int((islandWidth * xPos) - (islandWidth / 2), islandHeight * yPos, 0)).name.Contains("End") || !landTileMap.HasTile(new Vector3Int(islandWidth * xPos, (islandHeight * yPos) - (islandHeight / 2), 0)) || landTileMap.GetTile(new Vector3Int(islandWidth * xPos, (islandHeight * yPos) - (islandHeight / 2), 0)).name.Contains("End"))
-				{
-					RespawnIsland(xPos, yPos, fillAmount, smoothPasses, terrainTile, terrainType);
-					isCorrectIsland = false;
-				}
-				break;
-			case TerrainType.RLB:
-				if (!landTileMap.HasTile(new Vector3Int((islandWidth * xPos) + (islandWidth / 2), islandHeight * yPos, 0)) || landTileMap.GetTile(new Vector3Int((islandWidth * xPos) + (islandWidth / 2), islandHeight * yPos, 0)).name.Contains("End") || !landTileMap.HasTile(new Vector3Int((islandWidth * xPos) - (islandWidth / 2), islandHeight * yPos, 0)) || landTileMap.GetTile(new Vector3Int((islandWidth * xPos) - (islandWidth / 2), islandHeight * yPos, 0)).name.Contains("End") || !landTileMap.HasTile(new Vector3Int(islandWidth * xPos, (islandHeight * yPos) - (islandHeight / 2), 0)) || landTileMap.GetTile(new Vector3Int(islandWidth * xPos, (islandHeight * yPos) - (islandHeight / 2), 0)).name.Contains("End"))
-				{
-					RespawnIsland(xPos, yPos, fillAmount, smoothPasses, terrainTile, terrainType);
-					isCorrectIsland = false;
-				}
-				break;
-			case TerrainType.TRLB:
-				if (!landTileMap.HasTile(new Vector3Int(islandWidth * xPos, (islandHeight * yPos) + (islandHeight / 2), 0)) || landTileMap.GetTile(new Vector3Int(islandWidth * xPos, (islandHeight * yPos) + (islandHeight / 2), 0)).name.Contains("End") || !landTileMap.HasTile(new Vector3Int((islandWidth * xPos) + (islandWidth / 2), islandHeight * yPos, 0)) || landTileMap.GetTile(new Vector3Int((islandWidth * xPos) + (islandWidth / 2), islandHeight * yPos, 0)).name.Contains("End") || !landTileMap.HasTile(new Vector3Int((islandWidth * xPos) - (islandWidth / 2), islandHeight * yPos, 0)) || landTileMap.GetTile(new Vector3Int((islandWidth * xPos) - (islandWidth / 2), islandHeight * yPos, 0)).name.Contains("End") || !landTileMap.HasTile(new Vector3Int(islandWidth * xPos, (islandHeight * yPos) - (islandHeight / 2), 0)) || landTileMap.GetTile(new Vector3Int(islandWidth * xPos, (islandHeight * yPos) - (islandHeight / 2), 0)).name.Contains("End"))
-				{
-					RespawnIsland(xPos, yPos, fillAmount, smoothPasses, terrainTile, terrainType);
-					isCorrectIsland = false;
-				}
-				break;
-			default:
-				break;
-		}
-
-		if (isCorrectIsland)
-		{
-			//If the island has a top entrance and there is no island spawned above.
-			if (terrainType.ToString().Contains("T") && !IsIslandSpawned(xPos, yPos + 1))
+		//If the island has a top entrance and there is no island spawned above.
+		if (terrainType.ToString().Contains("T") && !IsIslandSpawned(xPos, yPos + 1))
 			{
 				//Create a list of chars that indicate the entrances needed for the new island.
 				List<char> entrancesNeeded = new List<char>();
@@ -241,107 +253,106 @@ public class TerrainGenerator : MonoBehaviour
 				SpawnIsland(xPos, yPos + 1, fillAmount, smoothPasses, terrainTile, RandomTerrainType(entrancesNeeded));
 			}
 
-			//If the island has a bottom entrance and there is no island spawned below.
-			if (terrainType.ToString().Contains("B") && !IsIslandSpawned(xPos, yPos - 1))
+		//If the island has a bottom entrance and there is no island spawned below.
+		if (terrainType.ToString().Contains("B") && !IsIslandSpawned(xPos, yPos - 1))
+		{
+			//Create a list of chars that indicate the entrances needed for the new island.
+			List<char> entrancesNeeded = new List<char>();
+
+			//Add a top entrance to the new island as the one above it has a bottom entrance.
+			entrancesNeeded.Add('T');
+
+			//Check if there is an Island two terrain tiles below and see if it has a top entrance.
+			if (IsIslandSpawned(xPos, yPos + 2) && GetIslandTerrainType(xPos, yPos + 2).ToString().Contains("T"))
 			{
-				//Create a list of chars that indicate the entrances needed for the new island.
-				List<char> entrancesNeeded = new List<char>();
-
-				//Add a top entrance to the new island as the one above it has a bottom entrance.
-				entrancesNeeded.Add('T');
-
-				//Check if there is an Island two terrain tiles below and see if it has a top entrance.
-				if (IsIslandSpawned(xPos, yPos + 2) && GetIslandTerrainType(xPos, yPos + 2).ToString().Contains("T"))
-				{
-					//If it does add a bottom entrance to the island.
-					entrancesNeeded.Add('B');
-				}
-
-				//Check if there is an island to the right of the island were about to spawn and if it has a left entrance.
-				if (IsIslandSpawned(xPos + 1, yPos - 1) && GetIslandTerrainType(xPos + 1, yPos - 1).ToString().Contains("L"))
-				{
-					//If it does then add a right entrance to the new island.
-					entrancesNeeded.Add('R');
-				}
-
-				//Check if there is an island to the left of the island were about to spawn and if it has a right entrance.
-				if (IsIslandSpawned(xPos - 1, yPos - 1) && GetIslandTerrainType(xPos - 1, yPos - 1).ToString().Contains("R"))
-				{
-					//If it does then add a left entrance to the new island.
-					entrancesNeeded.Add('L');
-				}
-
-				//Spawn in the new island with all the entrances required.
-				SpawnIsland(xPos, yPos - 1, fillAmount, smoothPasses, terrainTile, RandomTerrainType(entrancesNeeded));
+				//If it does add a bottom entrance to the island.
+				entrancesNeeded.Add('B');
 			}
 
-			//If the island has a Right entrance and there is no island spawned to the right.
-			if (terrainType.ToString().Contains("R") && !IsIslandSpawned(xPos + 1, yPos))
+			//Check if there is an island to the right of the island were about to spawn and if it has a left entrance.
+			if (IsIslandSpawned(xPos + 1, yPos - 1) && GetIslandTerrainType(xPos + 1, yPos - 1).ToString().Contains("L"))
 			{
-				//Create a list of chars that indicate the entrances needed for the new island.
-				List<char> entrancesNeeded = new List<char>();
-
-				//Add a left entrance to the new island as the one to the left it has a right entrance.
-				entrancesNeeded.Add('L');
-
-				//Check if there is an Island two terrain tiles right and see if it has a left entrance.
-				if (IsIslandSpawned(xPos + 2, yPos) && GetIslandTerrainType(xPos + 2, yPos).ToString().Contains("L"))
-				{
-					//If it does add a right entrance to the island.
-					entrancesNeeded.Add('R');
-				}
-
-				//Check if there is an island above the island were about to spawn and if it has a bottom entrance.
-				if (IsIslandSpawned(xPos + 1, yPos + 1) && GetIslandTerrainType(xPos + 1, yPos + 1).ToString().Contains("B"))
-				{
-					//If it does then add a top entrance to the new island.
-					entrancesNeeded.Add('T');
-				}
-
-				//Check if there is an island below the island were about to spawn and if it has a top entrance.
-				if (IsIslandSpawned(xPos + 1, yPos - 1) && GetIslandTerrainType(xPos + 1, yPos - 1).ToString().Contains("T"))
-				{
-					//If it does then add a bottom entrance to the new island.
-					entrancesNeeded.Add('B');
-				}
-
-				//Spawn in the new island with all the entrances required.
-				SpawnIsland(xPos + 1, yPos, fillAmount, smoothPasses, terrainTile, RandomTerrainType(entrancesNeeded));
-			}
-
-			//If the island has a left entrance and there is no island spawned to the left.
-			if (terrainType.ToString().Contains("L") && !IsIslandSpawned(xPos - 1, yPos))
-			{
-				//Create a list of chars that indicate the entrances needed for the new island.
-				List<char> entrancesNeeded = new List<char>();
-
-				//Add a Right entrance to the new island as the one to the right it has a left entrance.
+				//If it does then add a right entrance to the new island.
 				entrancesNeeded.Add('R');
-
-				//Check if there is an Island two terrain tiles left and see if it has a right entrance.
-				if (IsIslandSpawned(xPos - 2, yPos) && GetIslandTerrainType(xPos - 2, yPos).ToString().Contains("R"))
-				{
-					//If it does add a left entrance to the island.
-					entrancesNeeded.Add('L');
-				}
-
-				//Check if there is an island above the island were about to spawn and if it has a bottom entrance.
-				if (IsIslandSpawned(xPos - 1, yPos + 1) && GetIslandTerrainType(xPos - 1, yPos + 1).ToString().Contains("B"))
-				{
-					//If it does then add a top entrance to the new island.
-					entrancesNeeded.Add('T');
-				}
-
-				//Check if there is an island below the island were about to spawn and if it has a top entrance.
-				if (IsIslandSpawned(xPos - 1, yPos - 1) && GetIslandTerrainType(xPos - 1, yPos - 1).ToString().Contains("T"))
-				{
-					//If it does then add a bottom entrance to the new island.
-					entrancesNeeded.Add('B');
-				}
-
-				//Spawn in the new island with all the entrances required.
-				SpawnIsland(xPos - 1, yPos, fillAmount, smoothPasses, terrainTile, RandomTerrainType(entrancesNeeded));
 			}
+
+			//Check if there is an island to the left of the island were about to spawn and if it has a right entrance.
+			if (IsIslandSpawned(xPos - 1, yPos - 1) && GetIslandTerrainType(xPos - 1, yPos - 1).ToString().Contains("R"))
+			{
+				//If it does then add a left entrance to the new island.
+				entrancesNeeded.Add('L');
+			}
+
+			//Spawn in the new island with all the entrances required.
+			SpawnIsland(xPos, yPos - 1, fillAmount, smoothPasses, terrainTile, RandomTerrainType(entrancesNeeded));
+		}
+
+		//If the island has a Right entrance and there is no island spawned to the right.
+		if (terrainType.ToString().Contains("R") && !IsIslandSpawned(xPos + 1, yPos))
+		{
+			//Create a list of chars that indicate the entrances needed for the new island.
+			List<char> entrancesNeeded = new List<char>();
+
+			//Add a left entrance to the new island as the one to the left it has a right entrance.
+			entrancesNeeded.Add('L');
+
+			//Check if there is an Island two terrain tiles right and see if it has a left entrance.
+			if (IsIslandSpawned(xPos + 2, yPos) && GetIslandTerrainType(xPos + 2, yPos).ToString().Contains("L"))
+			{
+				//If it does add a right entrance to the island.
+				entrancesNeeded.Add('R');
+			}
+
+			//Check if there is an island above the island were about to spawn and if it has a bottom entrance.
+			if (IsIslandSpawned(xPos + 1, yPos + 1) && GetIslandTerrainType(xPos + 1, yPos + 1).ToString().Contains("B"))
+			{
+				//If it does then add a top entrance to the new island.
+				entrancesNeeded.Add('T');
+			}
+
+			//Check if there is an island below the island were about to spawn and if it has a top entrance.
+			if (IsIslandSpawned(xPos + 1, yPos - 1) && GetIslandTerrainType(xPos + 1, yPos - 1).ToString().Contains("T"))
+			{
+				//If it does then add a bottom entrance to the new island.
+				entrancesNeeded.Add('B');
+			}
+
+			//Spawn in the new island with all the entrances required.
+			SpawnIsland(xPos + 1, yPos, fillAmount, smoothPasses, terrainTile, RandomTerrainType(entrancesNeeded));
+		}
+
+		//If the island has a left entrance and there is no island spawned to the left.
+		if (terrainType.ToString().Contains("L") && !IsIslandSpawned(xPos - 1, yPos))
+		{
+			//Create a list of chars that indicate the entrances needed for the new island.
+			List<char> entrancesNeeded = new List<char>();
+
+			//Add a Right entrance to the new island as the one to the right it has a left entrance.
+			entrancesNeeded.Add('R');
+
+			//Check if there is an Island two terrain tiles left and see if it has a right entrance.
+			if (IsIslandSpawned(xPos - 2, yPos) && GetIslandTerrainType(xPos - 2, yPos).ToString().Contains("R"))
+			{
+				//If it does add a left entrance to the island.
+				entrancesNeeded.Add('L');
+			}
+
+			//Check if there is an island above the island were about to spawn and if it has a bottom entrance.
+			if (IsIslandSpawned(xPos - 1, yPos + 1) && GetIslandTerrainType(xPos - 1, yPos + 1).ToString().Contains("B"))
+			{
+				//If it does then add a top entrance to the new island.
+				entrancesNeeded.Add('T');
+			}
+
+			//Check if there is an island below the island were about to spawn and if it has a top entrance.
+			if (IsIslandSpawned(xPos - 1, yPos - 1) && GetIslandTerrainType(xPos - 1, yPos - 1).ToString().Contains("T"))
+			{
+				//If it does then add a bottom entrance to the new island.
+				entrancesNeeded.Add('B');
+			}
+
+			//Spawn in the new island with all the entrances required.
+			SpawnIsland(xPos - 1, yPos, fillAmount, smoothPasses, terrainTile, RandomTerrainType(entrancesNeeded));
 		}
 	}
 
@@ -388,11 +399,29 @@ public class TerrainGenerator : MonoBehaviour
 			}
 		}
 
+		List<string> weightedterrainTypesWithLetter =  new List<string>(terrainTypesWithLetter);
+
+		//Make the list weighted towards a low room entrance count.
+		for (int i = 0; i < terrainTypesWithLetter.Count; i++)
+		{
+			if (terrainTypesWithLetter[i].Length == 1)
+			{
+				for (int K = 0; K < 9; K++)
+				{
+					weightedterrainTypesWithLetter.Add(terrainTypesWithLetter[i]);
+				}
+			}
+			else if(terrainTypesWithLetter[i].Length == 2)
+			{
+				weightedterrainTypesWithLetter.Add(terrainTypesWithLetter[i]);
+			}
+		}
+
 		//Pick a random suitable terrain type index.
-		int randomIndex = UnityEngine.Random.Range(0, terrainTypesWithLetter.Count);
+		int randomIndex = UnityEngine.Random.Range(0, weightedterrainTypesWithLetter.Count);
 
 		//Return the random suitable terrain type.
-		return (TerrainType)Enum.Parse(typeof(TerrainType), terrainTypesWithLetter[randomIndex], true);
+		return (TerrainType)Enum.Parse(typeof(TerrainType), weightedterrainTypesWithLetter[randomIndex], true);
 	}
 
 	/// <summary>
@@ -424,8 +453,220 @@ public class TerrainGenerator : MonoBehaviour
 	{
 		if (filledGrid == null)//If filledGrid is not passed in.
 		{
-			//Create a new filled grid.
-			filledGrid = new FilledGrid(islandWidth, islandHeight, fillAmount, UnityEngine.Random.value.ToString(), smoothPasses);
+			bool isCorrectIsland = false;
+
+			while (isCorrectIsland == false)
+			{
+				//Create a new filled grid.
+				filledGrid = new FilledGrid(islandWidth, islandHeight, fillAmount, UnityEngine.Random.value.ToString(), smoothPasses);
+
+				//Pathfinding grid
+				RoyT.AStar.Grid islandGrid = new RoyT.AStar.Grid(islandWidth, islandHeight, 1.0f);
+
+				for (int x = 0; x < islandWidth; x++)
+				{
+					for (int y = 0; y < islandHeight; y++)
+					{
+						if (filledGrid.Grid[x, y] == 1)
+						{
+							islandGrid.BlockCell(new Position(x, y));
+						}
+					}
+				}
+
+				//Check if the island has the correct entrances in accordance to it's terrain type.
+				//If it doesn't meet the requirements re-spawn the island until it does.
+				switch (terrainType)
+				{
+					case TerrainType.T:
+						if (filledGrid.Grid[(islandWidth - 1) / 2, (islandHeight - 1)] == 0 && filledGrid.Grid[(islandWidth - 1) / 2, (islandHeight - 1) / 2] == 0)
+						{
+							Position[] path = islandGrid.GetPath(new Position((islandWidth - 1) / 2, (islandHeight - 1)), new Position((islandWidth - 1) / 2, (islandHeight - 1) / 2));
+							if (path.Length > 0)
+							{
+								isCorrectIsland = true;
+							}
+						}
+						break;
+					case TerrainType.R:
+						if (filledGrid.Grid[(islandWidth - 1), (islandHeight - 1) / 2] == 0 && filledGrid.Grid[(islandWidth - 1) / 2, (islandHeight - 1) / 2] == 0)
+						{
+							Position[] path = islandGrid.GetPath(new Position((islandWidth - 1), (islandHeight - 1) / 2), new Position((islandWidth - 1) / 2, (islandHeight - 1) / 2));
+							if (path.Length > 0)
+							{
+								isCorrectIsland = true;
+							}
+						}
+						break;
+					case TerrainType.L:
+						if (filledGrid.Grid[0, (islandHeight - 1) / 2] == 0 && filledGrid.Grid[(islandWidth - 1) / 2, (islandHeight - 1) / 2] == 0)
+						{
+							Position[] path = islandGrid.GetPath(new Position(0, (islandHeight - 1) / 2), new Position((islandWidth - 1) / 2, (islandHeight - 1) / 2));
+							if (path.Length > 0)
+							{
+								isCorrectIsland = true;
+							}
+						}
+						break;
+					case TerrainType.B:
+						if (filledGrid.Grid[(islandHeight - 1) / 2, 0] == 0 && filledGrid.Grid[(islandWidth - 1) / 2, (islandHeight - 1) / 2] == 0)
+						{
+							Position[] path = islandGrid.GetPath(new Position((islandWidth - 1) / 2, 0), new Position((islandWidth - 1) / 2, (islandHeight - 1) / 2));
+							if (path.Length > 0)
+							{
+								isCorrectIsland = true;
+							}
+						}
+						break;
+					case TerrainType.TR:
+						if (filledGrid.Grid[(islandWidth - 1) / 2, (islandHeight - 1)] == 0 && filledGrid.Grid[(islandWidth - 1), (islandHeight - 1) / 2] == 0)
+						{
+							Position[] path = islandGrid.GetPath(new Position((islandWidth - 1) / 2, (islandHeight - 1)), new Position((islandWidth - 1), (islandHeight - 1) / 2));
+							if (path.Length > 0)
+							{
+								isCorrectIsland = true;
+							}
+						}
+						break;
+					case TerrainType.TL:
+						if (filledGrid.Grid[(islandWidth - 1) / 2, (islandHeight - 1)] == 0 && filledGrid.Grid[0, (islandHeight - 1) / 2] == 0)
+						{
+							Position[] path = islandGrid.GetPath(new Position((islandWidth - 1) / 2, (islandHeight - 1)), new Position(0, (islandHeight - 1) / 2));
+							if (path.Length > 0)
+							{
+								isCorrectIsland = true;
+							}
+						}
+						break;
+					case TerrainType.TB:
+						if (filledGrid.Grid[(islandWidth - 1) / 2, (islandHeight - 1)] == 0 && filledGrid.Grid[(islandHeight - 1) / 2, 0] == 0)
+						{
+							Position[] path = islandGrid.GetPath(new Position((islandWidth - 1) / 2, (islandHeight - 1)), new Position((islandWidth - 1) / 2, 0));
+							if (path.Length > 0)
+							{
+								isCorrectIsland = true;
+							}
+						}
+						break;
+					case TerrainType.RL:
+						if (filledGrid.Grid[(islandWidth - 1), (islandHeight - 1) / 2] == 0 && filledGrid.Grid[0, (islandHeight - 1) / 2] == 0)
+						{
+							Position[] path = islandGrid.GetPath(new Position((islandWidth - 1), (islandHeight - 1) / 2), new Position(0, (islandHeight - 1) / 2));
+							if (path.Length > 0)
+							{
+								isCorrectIsland = true;
+							}
+						}
+						break;
+					case TerrainType.RB:
+						if (filledGrid.Grid[(islandWidth - 1), (islandHeight - 1) / 2] == 0 && filledGrid.Grid[(islandHeight - 1) / 2, 0] == 0)
+						{
+							Position[] path = islandGrid.GetPath(new Position((islandWidth - 1), (islandHeight - 1) / 2), new Position((islandWidth - 1) / 2, 0));
+							if (path.Length > 0)
+							{
+								isCorrectIsland = true;
+							}
+						}
+						break;
+					case TerrainType.LB:
+						if (filledGrid.Grid[0, (islandHeight - 1) / 2] == 0 && filledGrid.Grid[(islandHeight - 1) / 2, 0] == 0)
+						{
+							Position[] path = islandGrid.GetPath(new Position(0, (islandHeight - 1) / 2), new Position((islandWidth - 1) / 2, 0));
+							if (path.Length > 0)
+							{
+								isCorrectIsland = true;
+							}
+						}
+						break;
+					case TerrainType.TRL:
+						if (filledGrid.Grid[(islandWidth - 1) / 2, (islandHeight - 1)] == 0 && filledGrid.Grid[(islandWidth - 1), (islandHeight - 1) / 2] == 0 && filledGrid.Grid[0, (islandHeight - 1) / 2] == 0)
+						{
+							Position[] path = islandGrid.GetPath(new Position((islandWidth - 1) / 2, (islandHeight - 1)), new Position((islandWidth - 1), (islandHeight - 1) / 2));
+							if (path.Length > 0)
+							{
+								path = islandGrid.GetPath(new Position((islandWidth - 1) / 2, (islandHeight - 1)), new Position(0, (islandHeight - 1) / 2));
+
+								if (path.Length > 0)
+								{
+									isCorrectIsland = true;
+								}
+							}
+						}
+						break;
+					case TerrainType.TRB:
+						if (filledGrid.Grid[(islandWidth - 1) / 2, (islandHeight - 1)] == 0 && filledGrid.Grid[(islandWidth - 1), (islandHeight - 1) / 2] == 0 && filledGrid.Grid[(islandHeight - 1) / 2, 0] == 0)
+						{
+							Position[] path = islandGrid.GetPath(new Position((islandWidth - 1) / 2, (islandHeight - 1)), new Position((islandWidth - 1), (islandHeight - 1) / 2));
+							if (path.Length > 0)
+							{
+								path = islandGrid.GetPath(new Position((islandWidth - 1) / 2, (islandHeight - 1)), new Position((islandWidth - 1) / 2, 0));
+
+								if (path.Length > 0)
+								{
+									isCorrectIsland = true;
+								}
+							}
+						}
+						break;
+					case TerrainType.TLB:
+						if (filledGrid.Grid[(islandWidth - 1) / 2, (islandHeight - 1)] == 0 && filledGrid.Grid[0, (islandHeight - 1) / 2] == 0 && filledGrid.Grid[(islandHeight - 1) / 2, 0] == 0)
+						{
+							Position[] path = islandGrid.GetPath(new Position((islandWidth - 1) / 2, (islandHeight - 1)), new Position(0, (islandHeight - 1) / 2));
+							if (path.Length > 0)
+							{
+								path = islandGrid.GetPath(new Position((islandWidth - 1) / 2, (islandHeight - 1)), new Position((islandWidth - 1) / 2, 0));
+
+								if (path.Length > 0)
+								{
+									isCorrectIsland = true;
+								}
+							}
+						}
+						break;
+					case TerrainType.RLB:
+						if (filledGrid.Grid[(islandWidth - 1), (islandHeight - 1) / 2] == 0 && filledGrid.Grid[0, (islandHeight - 1) / 2] == 0 && filledGrid.Grid[(islandHeight - 1) / 2, 0] == 0)
+						{
+							Position[] path = islandGrid.GetPath(new Position((islandWidth - 1), (islandHeight - 1) / 2), new Position(0, (islandHeight - 1) / 2));
+							if (path.Length > 0)
+							{
+								path = islandGrid.GetPath(new Position((islandWidth - 1), (islandHeight - 1) / 2), new Position((islandWidth - 1) / 2, 0));
+
+								if (path.Length > 0)
+								{
+									isCorrectIsland = true;
+								}
+							}
+						}
+						break;
+					case TerrainType.TRLB:
+						if (filledGrid.Grid[(islandWidth - 1) / 2, (islandHeight - 1)] == 0 && filledGrid.Grid[(islandWidth - 1), (islandHeight - 1) / 2] == 0 && filledGrid.Grid[0, (islandHeight - 1) / 2] == 0 && filledGrid.Grid[(islandHeight - 1) / 2, 0] == 0) 
+						{
+							Position[] path = islandGrid.GetPath(new Position((islandWidth - 1) / 2, (islandHeight - 1)), new Position((islandWidth - 1), (islandHeight - 1) / 2));
+							if (path.Length > 0)
+							{
+								path = islandGrid.GetPath(new Position((islandWidth - 1) / 2, (islandHeight - 1)), new Position(0, (islandHeight - 1) / 2));
+
+								if (path.Length > 0)
+								{
+									path = islandGrid.GetPath(new Position((islandWidth - 1) / 2, (islandHeight - 1)), new Position((islandWidth - 1) / 2, 0));
+
+									if (path.Length > 0)
+									{
+										path = islandGrid.GetPath(new Position((islandWidth - 1) / 2, (islandHeight - 1)), new Position((islandWidth - 1) / 2, (islandHeight - 1) / 2));
+
+										if (path.Length > 0)
+										{
+											isCorrectIsland = true;
+										}
+									}
+								}
+							}
+						}
+						break;
+					default:
+						break;
+				}
+			}
 		}
 
 		//Sets collision Tiles above and below the island if there are no islands there.
@@ -500,7 +741,8 @@ public class TerrainGenerator : MonoBehaviour
 	/// </summary>
 	/// <param name="xPos">The x position of the island to remove.</param>
 	/// <param name="yPos">The y position of the island to remove.</param>
-	private void RemoveIsland(int xPos, int yPos)
+	/// <param name="fixTiling">True when deleting only one island to fix the island aboves land end's</param>
+	private void RemoveIsland(int xPos, int yPos, bool fixTiling = true)
 	{
 		//Removes all tiles from the islands and places colliders in there place.
 		for (int x = 0; x < islandWidth; x++)
@@ -522,15 +764,28 @@ public class TerrainGenerator : MonoBehaviour
 			}
 		}
 
-		foreach (SpawnedIsland spawnedIsland in SpawnedIslands)//Check each island.
+		if (fixTiling)
 		{
-			if (spawnedIsland.coords == new Vector2Int(xPos, yPos + 1))//If the island is one island above the island in question.
+			foreach (SpawnedIsland spawnedIsland in SpawnedIslands)//Check each island.
 			{
-				//Recreate the island above to fix the tiling issues.
-				CreateIsland(spawnedIsland.coords.x, spawnedIsland.coords.y, 0, 0, spawnedIsland.terrainTile, spawnedIsland.terrainType, spawnedIsland.filledGrid);
-				break;
+				if (spawnedIsland.coords == new Vector2Int(xPos, yPos + 1))//If the island is one island above the island in question.
+				{
+					//Recreate the island above to fix the tiling issues.
+					CreateIsland(spawnedIsland.coords.x, spawnedIsland.coords.y, 0, 0, spawnedIsland.terrainTile, spawnedIsland.terrainType, spawnedIsland.filledGrid);
+					break;
+				}
 			}
 		}
+	}
+
+	/// <summary>
+	/// Removes every island.
+	/// </summary>
+	private void RemoveAllIslands()
+	{
+		landTileMap.ClearAllTiles();
+		collisionTileMap.ClearAllTiles();
+		SpawnedIslands = new List<SpawnedIsland>();
 	}
 
 	/// <summary>

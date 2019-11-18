@@ -74,13 +74,27 @@
     <Compile Include="Assets\2d-extras-master\Assets\Tilemap\Tiles\Rule Tile\Scripts\RuleTile.cs" />
     <Compile Include="Assets\2d-extras-master\Assets\Tilemap\Tiles\Terrain Tile\Scripts\TerrainTile.cs" />
     <Compile Include="Assets\2d-extras-master\Assets\Tilemap\Tiles\Weighted Random Tile\WeightedRandomTile.cs" />
+    <Compile Include="Assets\AStar-master\Roy-T.AStar\AgentShape.cs" />
+    <Compile Include="Assets\AStar-master\Roy-T.AStar\AgentShapes.cs" />
+    <Compile Include="Assets\AStar-master\Roy-T.AStar\Boundary.cs" />
+    <Compile Include="Assets\AStar-master\Roy-T.AStar\Displacement.cs" />
+    <Compile Include="Assets\AStar-master\Roy-T.AStar\Grid.cs" />
+    <Compile Include="Assets\AStar-master\Roy-T.AStar\MinHeap.cs" />
+    <Compile Include="Assets\AStar-master\Roy-T.AStar\MinHeapNode.cs" />
+    <Compile Include="Assets\AStar-master\Roy-T.AStar\MovementPatterns.cs" />
+    <Compile Include="Assets\AStar-master\Roy-T.AStar\Offset.cs" />
+    <Compile Include="Assets\AStar-master\Roy-T.AStar\PathFinder.cs" />
+    <Compile Include="Assets\AStar-master\Roy-T.AStar\PathFinder.Debug.cs" />
+    <Compile Include="Assets\AStar-master\Roy-T.AStar\Position.cs" />
     <Compile Include="Assets\Scripts\CavernLayoutGenerator.cs" />
+    <Compile Include="Assets\Scripts\Entity.cs" />
     <Compile Include="Assets\Scripts\FilledGrid.cs" />
     <Compile Include="Assets\Scripts\PlayerController.cs" />
     <Compile Include="Assets\Scripts\TerrainGenerator.cs" />
     <Compile Include="Assets\Scripts\TerrainTile.cs" />
     <None Include="Assets\2d-extras-master\Assets\Tilemap\Tiles\Rule Tile\ScriptTemplates\NewCustomRuleTile.cs.txt" />
     <None Include="Assets\2d-extras-master\Assets\Tilemap\Brushes\Tint Brush Smooth\Shaders\TintedTilemap.shader" />
+    <None Include="Assets\AStar-master\ImprovementLog.txt" />
     <Reference Include="Unity.TextMeshPro.Editor">
       <HintPath>C:/Users/morga/Documents/University Level 6/CT6018 - Indie Game Development/CardCavern/CardCavern/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>
     </Reference>

@@ -5,21 +5,16 @@
 // Brief: Allows the user to control the players movement.
 //////////////////////////////////////////////////////////// 
 
+using RoyT.AStar;
 using UnityEngine;
 
 /// <summary>
 /// Takes input from the keyboard and translates that into movement of the player character.
 /// </summary>
-public class PlayerController : MonoBehaviour
+public class PlayerController : Entity
 {
 	#region Variables
 	#region Private
-	/// <summary>
-	/// The Rigidbody2D that effects the player.
-	/// </summary>
-	[Tooltip("The Rigidbody2D that effects the player.")]
-	[SerializeField] private Rigidbody2D body;
-
 	/// <summary>
 	/// The Animator the controls the player's animation.
 	/// </summary>
@@ -31,26 +26,6 @@ public class PlayerController : MonoBehaviour
 	/// </summary>
 	[Tooltip("The SpriteRenderer for the player.")]
 	[SerializeField] private SpriteRenderer spriteRenderer;
-
-	/// <summary>
-	/// The value of horizontal input.
-	/// </summary>
-	private float horizontal;
-
-	/// <summary>
-	/// The value of vertical input.
-	/// </summary>
-	private float vertical;
-
-	/// <summary>
-	/// The move speed multiplier for diagonal movement.
-	/// </summary>
-	private readonly float moveLimiter = 0.7f;
-
-	/// <summary>
-	/// How fast the player can move.
-	/// </summary>
-	private readonly float moveSpeed = 10.0f;
 	#endregion
 	#endregion
 
@@ -61,28 +36,27 @@ public class PlayerController : MonoBehaviour
 	/// </summary>
 	private void Update()
 	{
-		//Gives a value between -1 and 1.
-		horizontal = Input.GetAxisRaw("Horizontal");//-1 is left.
-		vertical = Input.GetAxisRaw("Vertical");//-1 is down.
-		FlipCharacter(horizontal);//Flips character.
-	}
+		//FlipCharacter(horizontal);//Flips character.
 
-	/// <summary>
-	/// Applies input to the player.
-	/// Updates the animator flags.
-	/// </summary>
-	private void FixedUpdate()
-	{
-		if (horizontal != 0 && vertical != 0)//Check for diagonal movement.
+		if (Input.GetKeyDown(KeyCode.W) && TerrainGenerator.grid.GetCellCost(new Position(position.X, position.Y + 1)) == 1)
 		{
-			//Limit movement speed diagonally, so you move at 70% speed.
-			horizontal *= moveLimiter;
-			vertical *= moveLimiter;
+			MoveToTile(new Position(position.X, position.Y + 1));
 		}
-
-		body.velocity = new Vector2(horizontal * moveSpeed, vertical * moveSpeed);//Applies the force to the player.
-		animator.SetFloat("Speed", body.velocity.magnitude);//Updates the animator flag for speed.
+		if (Input.GetKeyDown(KeyCode.S) && TerrainGenerator.grid.GetCellCost(new Position(position.X, position.Y - 1)) == 1)
+		{
+			MoveToTile(new Position(position.X, position.Y -1));
+		}
+		if (Input.GetKeyDown(KeyCode.A) && TerrainGenerator.grid.GetCellCost(new Position(position.X - 1, position.Y)) == 1)
+		{
+			MoveToTile(new Position(position.X - 1, position.Y));
+		}
+		if (Input.GetKeyDown(KeyCode.D) && TerrainGenerator.grid.GetCellCost(new Position(position.X + 1, position.Y)) == 1)
+		{
+			MoveToTile(new Position(position.X + 1, position.Y));
+		}
 	}
+
+	//animator.SetFloat("Speed", body.velocity.magnitude);//Updates the animator flag for speed.
 
 	/// <summary>
 	/// Flips the character to face the other direction.
