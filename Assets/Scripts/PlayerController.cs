@@ -26,18 +26,109 @@ public class PlayerController : Entity
 	/// </summary>
 	[Tooltip("The SpriteRenderer for the player.")]
 	[SerializeField] private SpriteRenderer spriteRenderer;
+
+	/// <summary>
+	/// The players max health.
+	/// </summary>
+	private int maxHealth = 5;
+	#endregion
+	#region Public
+	/// <summary>
+	/// Heart container transform.
+	/// </summary>
+	[HideInInspector] public Transform hearthContainerTransform;
 	#endregion
 	#endregion
 
 	#region Methods
 	#region Private
 	/// <summary>
+	/// Sets the health of the player to the max health.
+	/// </summary>
+	private void Start()
+	{
+		health = maxHealth;
+		UpdateHealth();
+	}
+
+	/// <summary>
+	/// Changes the health of the player.
+	/// </summary>
+	/// <param name="healthChange">How much to change the health by.</param>
+	public void ChangeHealth(int healthChange)
+	{
+		health += healthChange;
+		if (health <= 0)
+		{
+			//Die
+		}
+		if (health > maxHealth)
+		{
+			health = maxHealth;
+		}
+
+		UpdateHealth();
+	}
+
+	/// <summary>
+	/// Updates the UI representing the players health.
+	/// </summary>
+	private void UpdateHealth()
+	{
+		switch (health)
+		{
+			case 0:
+				hearthContainerTransform.GetChild(0).GetChild(0).gameObject.SetActive(false);
+				hearthContainerTransform.GetChild(1).GetChild(0).gameObject.SetActive(false);
+				hearthContainerTransform.GetChild(2).GetChild(0).gameObject.SetActive(false);
+				hearthContainerTransform.GetChild(3).GetChild(0).gameObject.SetActive(false);
+				hearthContainerTransform.GetChild(4).GetChild(0).gameObject.SetActive(false);
+				break;
+			case 1:
+				hearthContainerTransform.GetChild(0).GetChild(0).gameObject.SetActive(true);
+				hearthContainerTransform.GetChild(1).GetChild(0).gameObject.SetActive(false);
+				hearthContainerTransform.GetChild(2).GetChild(0).gameObject.SetActive(false);
+				hearthContainerTransform.GetChild(3).GetChild(0).gameObject.SetActive(false);
+				hearthContainerTransform.GetChild(4).GetChild(0).gameObject.SetActive(false);
+				break;
+			case 2:
+				hearthContainerTransform.GetChild(0).GetChild(0).gameObject.SetActive(true);
+				hearthContainerTransform.GetChild(1).GetChild(0).gameObject.SetActive(true);
+				hearthContainerTransform.GetChild(2).GetChild(0).gameObject.SetActive(false);
+				hearthContainerTransform.GetChild(3).GetChild(0).gameObject.SetActive(false);
+				hearthContainerTransform.GetChild(4).GetChild(0).gameObject.SetActive(false);
+				break;
+			case 3:
+				hearthContainerTransform.GetChild(0).GetChild(0).gameObject.SetActive(true);
+				hearthContainerTransform.GetChild(1).GetChild(0).gameObject.SetActive(true);
+				hearthContainerTransform.GetChild(2).GetChild(0).gameObject.SetActive(true);
+				hearthContainerTransform.GetChild(3).GetChild(0).gameObject.SetActive(false);
+				hearthContainerTransform.GetChild(4).GetChild(0).gameObject.SetActive(false);
+				break;
+			case 4:
+				hearthContainerTransform.GetChild(0).GetChild(0).gameObject.SetActive(true);
+				hearthContainerTransform.GetChild(1).GetChild(0).gameObject.SetActive(true);
+				hearthContainerTransform.GetChild(2).GetChild(0).gameObject.SetActive(true);
+				hearthContainerTransform.GetChild(3).GetChild(0).gameObject.SetActive(true);
+				hearthContainerTransform.GetChild(4).GetChild(0).gameObject.SetActive(false);
+				break;
+			case 5:
+				hearthContainerTransform.GetChild(0).GetChild(0).gameObject.SetActive(true);
+				hearthContainerTransform.GetChild(1).GetChild(0).gameObject.SetActive(true);
+				hearthContainerTransform.GetChild(2).GetChild(0).gameObject.SetActive(true);
+				hearthContainerTransform.GetChild(3).GetChild(0).gameObject.SetActive(true);
+				hearthContainerTransform.GetChild(4).GetChild(0).gameObject.SetActive(true);
+				break;
+			default:
+				break;
+		}
+	}
+
+	/// <summary>
 	/// Gets the input for the player and applies the correct direction to the player.
 	/// </summary>
 	private void Update()
 	{
-		//FlipCharacter(horizontal);//Flips character.
-
 		if (Input.GetKeyDown(KeyCode.W) && TerrainGenerator.grid.GetCellCost(new Position(position.X, position.Y + 1)) == 1)
 		{
 			MoveToTile(new Position(position.X, position.Y + 1));
@@ -55,8 +146,6 @@ public class PlayerController : Entity
 			MoveToTile(new Position(position.X + 1, position.Y));
 		}
 	}
-
-	//animator.SetFloat("Speed", body.velocity.magnitude);//Updates the animator flag for speed.
 
 	/// <summary>
 	/// Flips the character to face the other direction.

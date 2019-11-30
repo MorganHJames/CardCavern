@@ -31,6 +31,4 @@ public class TerrainTile : ScriptableObject
 	public TileBase landsEnd;
 	#endregion
 	#endregion
-
-	
 }

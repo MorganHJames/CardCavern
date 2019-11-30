@@ -2,27 +2,33 @@
 // File: Entity.cs
 // Author: Morgan Henry James
 // Date Created: 14-11-2019
-// Brief: 
+// Brief: The class that all objects that exist on a tile shall inherit from.
 //////////////////////////////////////////////////////////// 
 
 using UnityEngine;
 using RoyT.AStar;
 
 /// <summary>
-/// 
+/// The class that all objects that exist on a tile shall inherit from.
 /// </summary>
 public class Entity : MonoBehaviour
 {
 	#region Variables
-	#region Private
-    #endregion
     #region Public
+	/// <summary>
+	/// The position of the entity.
+	/// </summary>
 	public Position position;
+
+	/// <summary>
+	/// The health of the entity.
+	/// </summary>
+	public int health = 1;
 	#endregion
 	#endregion
 
 	#region Methods
-	#region Private
+	#region Public
 	/// <summary>
 	/// Moves the entity to a new position.
 	/// </summary>
@@ -42,9 +48,6 @@ public class Entity : MonoBehaviour
 
 		position = postionToMoveTo;
 	}
-    #endregion
-    #region Public
-    
     #endregion
     #endregion
 }

@@ -120,7 +120,7 @@ namespace RoyT.AStar
         /// <param name="end">The end position</param>
         /// <returns>Positions along the shortest path from start to end, or an empty array if no path could be found</returns>
         public Position[] GetPath(Position start, Position end)
-            => GetPath(start, end, MovementPatterns.Full, AgentShapes.Dot);
+            => GetPath(start, end, MovementPatterns.LateralOnly, AgentShapes.Dot);
 
         /// <summary>
         /// Computes the lowest-cost path from start to end inside the grid for an agent with a custom

@@ -49,6 +49,18 @@ public class TerrainGenerator : MonoBehaviour
 	[SerializeField] private Tilemap landTileMap;
 
 	/// <summary>
+	/// The action handler.
+	/// </summary>
+	[Tooltip("The action handler.")]
+	[SerializeField] private ActionHandler actionHandler;
+
+	/// <summary>
+	/// Heart container transform.
+	/// </summary>
+	[Tooltip("Heart container transform.")]
+	[SerializeField] private Transform hearthContainerTransform;
+
+	/// <summary>
 	/// The tile map for the collisions to be put onto.
 	/// </summary>
 	[Tooltip("The tile map for the collisions to be put onto.")]
@@ -60,13 +72,25 @@ public class TerrainGenerator : MonoBehaviour
 	private List<SpawnedIsland> SpawnedIslands = new List<SpawnedIsland>();
 
 	/// <summary>
-	/// Grid of all islands.
+	/// The bottom left cell position.
 	/// </summary>
-	public static RoyT.AStar.Grid grid;
-
 	private static Vector3 bottomLeftCellPos;
 
+	/// <summary>
+	/// How far apart each cell is.
+	/// </summary>
 	private static float cellSpacing;
+	#endregion
+	#region Public
+	/// <summary>
+	/// Grid of all islands.
+	/// </summary>
+	[HideInInspector] public static RoyT.AStar.Grid grid;
+
+	/// <summary>
+	/// The player controller.
+	/// </summary>
+	[HideInInspector] public PlayerController playerController;
 	#endregion
 	#endregion
 
@@ -99,7 +123,9 @@ public class TerrainGenerator : MonoBehaviour
 	{
 		Transform playerEntity = Instantiate(player);
 		playerEntity.position = new Vector3(2.79f, -6.5f, 0f);
-		playerEntity.GetComponent<PlayerController>().MoveToTile(WorldToGrid(playerEntity.position));
+		playerController = playerEntity.GetComponent<PlayerController>();
+		playerController.MoveToTile(WorldToGrid(playerEntity.position));
+		playerController.hearthContainerTransform = hearthContainerTransform;
 	}
 
 	/// <summary>
@@ -164,6 +190,7 @@ public class TerrainGenerator : MonoBehaviour
 		cellSpacing = bottemLeftPlusOne.x - bottomLeftCellPos.x;
 
 		//For Debugging the full grid
+		#region Debug
 		//for (int i = 0; i < (gridWidth + 1) * islandWidth; i++)
 		//{
 		//	for (int ii = 0; ii < (gridHeight + 1) * islandHeight; ii++)
@@ -181,6 +208,7 @@ public class TerrainGenerator : MonoBehaviour
 		//		}
 		//	}
 		//}
+		#endregion
 	}
 
 	/// <summary>
