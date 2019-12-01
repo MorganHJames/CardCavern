@@ -434,6 +434,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   health: 1
   healthContainer: {fileID: 2487429440582103694}
+  enemyMeleeTileIndicatorPrefab: {fileID: 2507389607313000930, guid: 93876f189e6773f4c8eeb4f29d835135,
+    type: 3}
+  enemyPushTileIndicatorPrefab: {fileID: 2507389607313000930, guid: aa44ccaa657fd7f4f92da67aaf5a8e0b,
+    type: 3}
 --- !u!1 &2851466385713039551
 GameObject:
   m_ObjectHideFlags: 0

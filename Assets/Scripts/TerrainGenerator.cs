@@ -133,7 +133,7 @@ public class TerrainGenerator : MonoBehaviour
 	private void SpawnPlayer()
 	{
 		Transform playerEntity = Instantiate(player);
-		playerEntity.position = new Vector3(2.79f, -6.5f, 0f);
+		playerEntity.position = new Vector3(2.82f, -6.39f, 0f);
 		playerController = playerEntity.GetComponent<PlayerController>();
 		playerController.MoveToTile(WorldToGrid(playerEntity.position));
 		playerController.hearthContainerTransform = hearthContainerTransform;
@@ -289,7 +289,7 @@ public class TerrainGenerator : MonoBehaviour
 	/// <returns>The grid position.</returns>
 	public static Position WorldToGrid(Vector3 position)
 	{
-		return new Position((int)(((position.x - bottomLeftCellPos.x + 6f) / cellSpacing) - 0.5f) + 1, (int)(((position.y - bottomLeftCellPos.y + 6f) / cellSpacing) - 0.5f) + 1);
+		return new Position(Mathf.FloorToInt(((position.x - bottomLeftCellPos.x + 6f) / cellSpacing) - 0.5f), Mathf.FloorToInt(((position.y - bottomLeftCellPos.y + 6f) / cellSpacing) - 0.5f));
 	}
 
 	/// <summary>

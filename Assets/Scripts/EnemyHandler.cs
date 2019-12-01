@@ -15,7 +15,11 @@ public class EnemyHandler : MonoBehaviour
 {
 	#region Variables
 	#region Private
-
+	/// <summary>
+	/// The terrain generator.
+	/// </summary>
+	[Tooltip("The terrain generator.")]
+	[SerializeField] private TerrainGenerator terrainGenerator;
 	#endregion
 	#region Public
 	/// <summary>
@@ -36,7 +40,26 @@ public class EnemyHandler : MonoBehaviour
 	/// </summary>
     public void CommenceEnemyTurn()
 	{
-		CardMover.canMove = true;
+		foreach (Enemy enemy in enemies)
+		{
+			if (terrainGenerator.playerController.IsDead())
+			{
+				enemy.ResolveAttack(true);
+			}
+			else
+			{
+				enemy.ResolveAttack();
+			}
+		}
+		if (!terrainGenerator.playerController.IsDead())
+		{
+			foreach (Enemy enemy in enemies)
+			{
+				enemy.HandleTurn(terrainGenerator.playerController);
+			}
+			//Go back to players turn.
+			CardMover.canMove = true;
+		}
 	}
     #endregion
     #endregion

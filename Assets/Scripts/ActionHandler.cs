@@ -424,8 +424,15 @@ public class ActionHandler : MonoBehaviour
 		//Removes the action from the temp card.
 		tempCard.actions = tempCard.actions.Skip(1).ToArray();
 
-		//Check if there are more actions to be done.
-		StartCoroutine(CheckForActions());
+		if (terrainGenerator.playerController.IsDead())
+		{
+			AllActionsComplete();
+		}
+		else
+		{
+			//Check if there are more actions to be done.
+			StartCoroutine(CheckForActions());
+		}
 	}
 
 	/// <summary>
@@ -455,7 +462,10 @@ public class ActionHandler : MonoBehaviour
 		cardOutlineImage.color = new Color(1f, 1f, 1f, 0f);
 		cardOutlineImage.transform.position = cardOulineDectivatedTransform.position;
 
-		enemyHandler.CommenceEnemyTurn();
+		if (!terrainGenerator.playerController.IsDead())
+		{
+			enemyHandler.CommenceEnemyTurn();
+		}
 	}
 	#endregion
 	#endregion

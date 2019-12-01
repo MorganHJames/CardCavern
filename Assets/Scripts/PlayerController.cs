@@ -26,13 +26,13 @@ public class PlayerController : Entity
 	/// </summary>
 	[Tooltip("The SpriteRenderer for the player.")]
 	[SerializeField] private SpriteRenderer spriteRenderer;
-
+	#endregion
+	#region Public
 	/// <summary>
 	/// The players max health.
 	/// </summary>
-	private int maxHealth = 5;
-	#endregion
-	#region Public
+	[HideInInspector] public int maxHealth = 5;
+
 	/// <summary>
 	/// Heart container transform.
 	/// </summary>
@@ -101,6 +101,14 @@ public class PlayerController : Entity
 				hearthContainerTransform.GetChild(4).GetChild(0).gameObject.SetActive(true);
 				break;
 			default:
+				if (health < 0)
+				{
+					hearthContainerTransform.GetChild(0).GetChild(0).gameObject.SetActive(false);
+					hearthContainerTransform.GetChild(1).GetChild(0).gameObject.SetActive(false);
+					hearthContainerTransform.GetChild(2).GetChild(0).gameObject.SetActive(false);
+					hearthContainerTransform.GetChild(3).GetChild(0).gameObject.SetActive(false);
+					hearthContainerTransform.GetChild(4).GetChild(0).gameObject.SetActive(false);
+				}
 				break;
 		}
 	}
@@ -113,18 +121,26 @@ public class PlayerController : Entity
 		if (Input.GetKeyDown(KeyCode.W) && TerrainGenerator.grid.GetCellCost(new Position(position.X, position.Y + 1)) == 1)
 		{
 			MoveToTile(new Position(position.X, position.Y + 1));
+			Debug.Log(position.X + " " + position.Y);
+			Debug.Log(TerrainGenerator.WorldToGrid(transform.position).X + " " + TerrainGenerator.WorldToGrid(transform.position).Y);
 		}
 		if (Input.GetKeyDown(KeyCode.S) && TerrainGenerator.grid.GetCellCost(new Position(position.X, position.Y - 1)) == 1)
 		{
 			MoveToTile(new Position(position.X, position.Y -1));
+			Debug.Log(position.X + " " + position.Y);
+			Debug.Log(TerrainGenerator.WorldToGrid(transform.position).X + " " + TerrainGenerator.WorldToGrid(transform.position).Y);
 		}
 		if (Input.GetKeyDown(KeyCode.A) && TerrainGenerator.grid.GetCellCost(new Position(position.X - 1, position.Y)) == 1)
 		{
 			MoveToTile(new Position(position.X - 1, position.Y));
+			Debug.Log(position.X + " " + position.Y);
+			Debug.Log(TerrainGenerator.WorldToGrid(transform.position).X + " " + TerrainGenerator.WorldToGrid(transform.position).Y);
 		}
 		if (Input.GetKeyDown(KeyCode.D) && TerrainGenerator.grid.GetCellCost(new Position(position.X + 1, position.Y)) == 1)
 		{
 			MoveToTile(new Position(position.X + 1, position.Y));
+			Debug.Log(position.X + " " + position.Y);
+			Debug.Log(TerrainGenerator.WorldToGrid(transform.position).X + " " + TerrainGenerator.WorldToGrid(transform.position).Y);
 		}
 	}
 
@@ -151,6 +167,11 @@ public class PlayerController : Entity
 		if (health <= 0)
 		{
 			//Die
+			Debug.Log("Player died");
+			foreach (Enemy enemy in EnemyHandler.enemies)
+			{
+				enemy.ResolveAttack(true);
+			}
 		}
 		if (health > maxHealth)
 		{
@@ -158,6 +179,22 @@ public class PlayerController : Entity
 		}
 
 		UpdateHealth();
+	}
+
+	/// <summary>
+	/// Returns whether or not the player is dead.
+	/// </summary>
+	/// <returns>Boolean indicating player life state.</returns>
+	public bool IsDead()
+	{
+		if (health < 1)
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 	#endregion
 	#endregion
