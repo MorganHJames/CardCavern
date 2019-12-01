@@ -153,6 +153,17 @@ public class CardHandler : MonoBehaviour
 				}
 			}
 		}
+		else
+		{
+			foreach (Transform child in transform)
+			{
+				//Change rotation.
+				child.rotation = Quaternion.Euler(new Vector3(0, 0, 0));
+
+				//Change position
+				child.position = new Vector3(child.position.x, Mathf.Sin(1) * positionChange, child.position.z);
+			}
+		}
 	}
 
 	/// <summary>
@@ -186,10 +197,6 @@ public class CardHandler : MonoBehaviour
 	/// </summary>
 	public void RemoveCard(GameObject cardGameObject)
 	{
-		//Reset the card outline image.
-		cardOutlineImage.color = new Color(1f, 1f, 1f, 0f);
-		cardOutlineImage.transform.position = Vector3.zero;
-
 		//Destroy card.
 		Destroy(cardGameObject);
 
@@ -198,8 +205,6 @@ public class CardHandler : MonoBehaviour
 
 		//Update remaining cards.
 		StartCoroutine(UpdateRotationAndPosition());
-
-		//Allow cards to move again/change turn then use the turn indicator to turn them back on
 	}
 	#endregion
 	#endregion

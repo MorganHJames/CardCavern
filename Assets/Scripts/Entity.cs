@@ -14,16 +14,16 @@ using RoyT.AStar;
 public class Entity : MonoBehaviour
 {
 	#region Variables
-    #region Public
+	#region Public
 	/// <summary>
 	/// The position of the entity.
 	/// </summary>
-	public Position position;
+	[HideInInspector] public Position position;
 
 	/// <summary>
 	/// The health of the entity.
 	/// </summary>
-	public int health = 1;
+	[HideInInspector] public int health = 1;
 	#endregion
 	#endregion
 

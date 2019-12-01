@@ -10,6 +10,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.UI;
 using static Card;
 
 /// <summary>
@@ -37,8 +38,8 @@ public class ActionHandler : MonoBehaviour
 	/// <summary>
 	/// All of the active walkable tile indicator.
 	/// </summary>
-	private List<GameObject> walkableTileIndicators = new List<GameObject>();
-	
+	private List<GameObject> tileIndicators = new List<GameObject>();
+
 	/// <summary>
 	/// The card Handler.
 	/// </summary>
@@ -46,10 +47,46 @@ public class ActionHandler : MonoBehaviour
 	[SerializeField] private CardHandler cardHandler;
 
 	/// <summary>
+	/// The card outline image.
+	/// </summary>
+	[Tooltip("The card outline image.")]
+	[SerializeField] private Image cardOutlineImage;
+
+	/// <summary>
+	/// The card outline deactivated transform.
+	/// </summary>
+	[Tooltip("The card outline deactivated transform.")]
+	[SerializeField] private Transform cardOulineDectivatedTransform;
+
+	/// <summary>
+	/// The enemy handler.
+	/// </summary>
+	[Tooltip("The enemy handler.")]
+	[SerializeField] private EnemyHandler enemyHandler;
+
+	/// <summary>
 	/// The walkable tile indicator prefab.
 	/// </summary>
 	[Tooltip("The walkable tile indicator prefab.")]
 	[SerializeField] private GameObject walkableTileIndicatorPrefab;
+
+	/// <summary>
+	/// The melee tile indicator prefab.
+	/// </summary>
+	[Tooltip("The melee tile indicator prefab.")]
+	[SerializeField] private GameObject meleeTileIndicatorPrefab;
+
+	/// <summary>
+	/// The boomerang tile indicator prefab.
+	/// </summary>
+	[Tooltip("The boomerang tile indicator prefab.")]
+	[SerializeField] private GameObject boomerangTileIndicatorPrefab;
+
+	/// <summary>
+	/// The push tile indicator prefab.
+	/// </summary>
+	[Tooltip("The push tile indicator prefab.")]
+	[SerializeField] private GameObject pushTileIndicatorPrefab;
 
 	/// <summary>
 	/// The terrain generator.
@@ -85,7 +122,7 @@ public class ActionHandler : MonoBehaviour
 			//Activate finger.
 			cardGameObject.transform.GetChild(0).GetChild(0).GetChild(3).gameObject.SetActive(true);
 
-			yield return new WaitForSeconds(1f);
+			yield return new WaitForSeconds(0.5f);
 
 			//Do the action
 			DoAction(tempCard.actions[0]);
@@ -106,33 +143,45 @@ public class ActionHandler : MonoBehaviour
 		switch (action.actionType)
 		{
 			case ActionTypes.MELEE:
-				//Handle the completion of the action.
-				CompleteAction();
+				//Spawn a melee indicator above, below, to the left and to the right of the player.
+				Position playerPos = terrainGenerator.playerController.position;
+				SpawnAttackIndicator(new Position(playerPos.X, playerPos.Y + 1), action.amount, meleeTileIndicatorPrefab);
+				SpawnAttackIndicator(new Position(playerPos.X, playerPos.Y - 1), action.amount, meleeTileIndicatorPrefab);
+				SpawnAttackIndicator(new Position(playerPos.X + 1, playerPos.Y), action.amount, meleeTileIndicatorPrefab);
+				SpawnAttackIndicator(new Position(playerPos.X - 1, playerPos.Y), action.amount, meleeTileIndicatorPrefab);
 				break;
 			case ActionTypes.HEAL:
 				terrainGenerator.playerController.ChangeHealth(action.amount);
-				//Handle the completion of the action.
 				CompleteAction();
 				break;
 			case ActionTypes.BOMB:
-				//Handle the completion of the action.
 				CompleteAction();
 				break;
 			case ActionTypes.DAMAGE:
 				terrainGenerator.playerController.ChangeHealth(-action.amount);
-				//Handle the completion of the action.
 				CompleteAction();
 				break;
 			case ActionTypes.RANGE:
-				//Handle the completion of the action.
-				CompleteAction();
+				//Spawn a boomerang indicators a tile away above, below, to the left and to the right of the player.
+				Position playerPosition = terrainGenerator.playerController.position;
+				SpawnAttackIndicator(new Position(playerPosition.X, playerPosition.Y + 2), action.amount, boomerangTileIndicatorPrefab);
+				SpawnAttackIndicator(new Position(playerPosition.X, playerPosition.Y - 2), action.amount, boomerangTileIndicatorPrefab);
+				SpawnAttackIndicator(new Position(playerPosition.X + 2, playerPosition.Y), action.amount, boomerangTileIndicatorPrefab);
+				SpawnAttackIndicator(new Position(playerPosition.X - 2, playerPosition.Y), action.amount, boomerangTileIndicatorPrefab);
+				SpawnAttackIndicator(new Position(playerPosition.X, playerPosition.Y + 3), action.amount, boomerangTileIndicatorPrefab);
+				SpawnAttackIndicator(new Position(playerPosition.X, playerPosition.Y - 3), action.amount, boomerangTileIndicatorPrefab);
+				SpawnAttackIndicator(new Position(playerPosition.X + 3, playerPosition.Y), action.amount, boomerangTileIndicatorPrefab);
+				SpawnAttackIndicator(new Position(playerPosition.X - 3, playerPosition.Y), action.amount, boomerangTileIndicatorPrefab);
+				SpawnAttackIndicator(new Position(playerPosition.X, playerPosition.Y + 4), action.amount, boomerangTileIndicatorPrefab);
+				SpawnAttackIndicator(new Position(playerPosition.X, playerPosition.Y - 4), action.amount, boomerangTileIndicatorPrefab);
+				SpawnAttackIndicator(new Position(playerPosition.X + 4, playerPosition.Y), action.amount, boomerangTileIndicatorPrefab);
+				SpawnAttackIndicator(new Position(playerPosition.X - 4, playerPosition.Y), action.amount, boomerangTileIndicatorPrefab);
 				break;
 			case ActionTypes.MOVE:
-				//make sure it works in multi
 				TerrainGenerator.grid.UnblockCell(terrainGenerator.playerController.position);
 
 				List<Position> positionsWithIndicators = new List<Position>();
-				walkableTileIndicators = new List<GameObject>();
+				tileIndicators = new List<GameObject>();
 
 				for (int x = 0; x < TerrainGenerator.grid.DimX; x++)
 				{
@@ -153,11 +202,11 @@ public class ActionHandler : MonoBehaviour
 										GameObject walkableTileIndicator = Instantiate(walkableTileIndicatorPrefab);
 										walkableTileIndicator.transform.parent = this.transform;
 										walkableTileIndicator.transform.position = TerrainGenerator.GridToWorld(position);
-										walkableTileIndicators.Add(walkableTileIndicator);
-										walkableTileIndicator.GetComponent<WalkableTileIndicator>().mouseUpEvent.AddListener(() => 
+										tileIndicators.Add(walkableTileIndicator);
+										walkableTileIndicator.GetComponent<TileIndicator>().mouseUpEvent.AddListener(() => 
 										{
 											terrainGenerator.playerController.MoveToTile(position);
-											MoveComplete();
+											CompleteAction();
 										});
 										positionsWithIndicators.Add(position);
 									}
@@ -170,18 +219,21 @@ public class ActionHandler : MonoBehaviour
 				TerrainGenerator.grid.BlockCell(terrainGenerator.playerController.position);
 
 				//If the player cant move just go to the next action.
-				if (walkableTileIndicators.Count == 0)
+				if (tileIndicators.Count == 0)
 				{
 					CompleteAction();
 				}
 				break;
 			case ActionTypes.DRAW:
-				//Handle the completion of the action.
 				CompleteAction();
 				break;
 			case ActionTypes.PUSH:
-				//Handle the completion of the action.
-				CompleteAction();
+				//Spawn a push indicator above, below, to the left and to the right of the player.
+				Position playerPositioning = terrainGenerator.playerController.position;
+				SpawnPushIndicator(new Position(playerPositioning.X, playerPositioning.Y + 1), action.amount, playerPositioning);
+				SpawnPushIndicator(new Position(playerPositioning.X, playerPositioning.Y - 1), action.amount, playerPositioning);
+				SpawnPushIndicator(new Position(playerPositioning.X + 1, playerPositioning.Y), action.amount, playerPositioning);
+				SpawnPushIndicator(new Position(playerPositioning.X - 1, playerPositioning.Y), action.amount, playerPositioning);
 				break;
 			default:
 				break;
@@ -189,15 +241,168 @@ public class ActionHandler : MonoBehaviour
 	}
 
 	/// <summary>
-	/// Handles the completion of a movement.
+	/// Spawn an Attack tile indicator in.
 	/// </summary>
-	private	void MoveComplete()
+	/// <param name="position">Where on the grid to spawn in the indicator.</param>
+	/// <param name="healthChangeAmount">How much to damage the enemy.</param>
+	/// <param name="tileIndicatorPrefab">The tile to spawn.</param>
+	private void SpawnAttackIndicator(Position position, int healthChangeAmount, GameObject tileIndicatorPrefab)
 	{
-		for (int i = 0; i < walkableTileIndicators.Count; i++)
+		GameObject tileIndicator = Instantiate(tileIndicatorPrefab);
+		tileIndicator.transform.parent = this.transform;
+		tileIndicator.transform.position = TerrainGenerator.GridToWorld(position);
+		tileIndicators.Add(tileIndicator);
+		tileIndicator.GetComponent<TileIndicator>().mouseUpEvent.AddListener(() =>
 		{
-			Destroy(walkableTileIndicators[i]);
-		}
-		CompleteAction();
+			//If enemy in enemy list position is same as position passed in.
+			foreach (Enemy enemy in EnemyHandler.enemies)
+			{
+				if (enemy.position == position)
+				{
+					//Hurt enemy.
+					enemy.ChangeHealth(-healthChangeAmount);
+
+					//Early out.
+					break;
+				}
+			}
+			CompleteAction();
+		});
+	}
+
+	/// <summary>
+	/// Spawn a push tile indicator in.
+	/// </summary>
+	/// <param name="position">The position of the spawn indicator.</param>
+	/// <param name="pushDistance">How far to push the enemy</param>
+	/// <param name="playerPosition">Where the player is.</param>
+	private void SpawnPushIndicator(Position position, int pushDistance, Position playerPosition)
+	{
+		GameObject tileIndicator = Instantiate(pushTileIndicatorPrefab);
+		tileIndicator.transform.parent = this.transform;
+		tileIndicator.transform.position = TerrainGenerator.GridToWorld(position);
+		tileIndicators.Add(tileIndicator);
+		tileIndicator.GetComponent<TileIndicator>().mouseUpEvent.AddListener(() =>
+		{
+			//If enemy in enemy list position is same as position passed in.
+			foreach (Enemy enemy in EnemyHandler.enemies)
+			{
+				if (enemy.position == position)
+				{
+					if (position == new Position(playerPosition.X, playerPosition.Y + 1))
+					{
+						//Push enemy up.
+						bool pushed = false;
+						for (int i = 1; i < pushDistance + 1; i++)
+						{
+							foreach (Enemy badGuy in EnemyHandler.enemies)
+							{
+								//If enemy on tile getting pushed passed.
+								if (badGuy.position == new Position(position.X, position.Y + i))
+								{
+									//Push to tile before.
+									enemy.PushedToTile(new Position(position.X, position.Y + i - 1));
+									pushed = true;
+									break;
+								}
+							}
+							if (pushed)
+							{
+								break;
+							}
+						}
+						if (!pushed)
+						{
+							enemy.PushedToTile(new Position(position.X, position.Y + pushDistance));
+						}
+					}
+					if (position == new Position(playerPosition.X, playerPosition.Y - 1))
+					{
+						//Push enemy down.
+						bool pushed = false;
+						for (int i = 1; i < pushDistance + 1; i++)
+						{
+							foreach (Enemy badGuy in EnemyHandler.enemies)
+							{
+								//If enemy on tile getting pushed passed.
+								if (badGuy.position == new Position(position.X, position.Y - i))
+								{
+									//Push to tile before.
+									enemy.PushedToTile(new Position(position.X, position.Y - i + 1));
+									pushed = true;
+									break;
+								}
+							}
+							if (pushed)
+							{
+								break;
+							}
+						}
+						if (!pushed)
+						{
+							enemy.PushedToTile(new Position(position.X, position.Y - pushDistance));
+						}
+					}
+					if (position == new Position(playerPosition.X + 1, playerPosition.Y))
+					{
+						//Push enemy right.
+						bool pushed = false;
+						for (int i = 1; i < pushDistance + 1; i++)
+						{
+							foreach (Enemy badGuy in EnemyHandler.enemies)
+							{
+								//If enemy on tile getting pushed passed.
+								if (badGuy.position == new Position(position.X + i, position.Y))
+								{
+									//Push to tile before.
+									enemy.PushedToTile(new Position(position.X + i - 1, position.Y));
+									pushed = true;
+									break;
+								}
+							}
+							if (pushed)
+							{
+								break;
+							}
+						}
+						if (!pushed)
+						{
+							enemy.PushedToTile(new Position(position.X + pushDistance, position.Y));
+						}
+					}
+					if (position == new Position(playerPosition.X - 1, playerPosition.Y))
+					{
+						//Push enemy left.
+						bool pushed = false;
+						for (int i = 1; i < pushDistance + 1; i++)
+						{
+							foreach (Enemy badGuy in EnemyHandler.enemies)
+							{
+								//If enemy on tile getting pushed passed.
+								if (badGuy.position == new Position(position.X - i, position.Y))
+								{
+									//Push to tile before.
+									enemy.PushedToTile(new Position(position.X - i + 1, position.Y));
+									pushed = true;
+									break;
+								}
+							}
+							if (pushed)
+							{
+								break;
+							}
+						}
+						if (!pushed)
+						{
+							enemy.PushedToTile(new Position(position.X - pushDistance, position.Y));
+						}
+					}
+					//Early out.
+					break;
+				}
+			}
+			CompleteAction();
+		});
 	}
 
 	/// <summary>
@@ -205,6 +410,12 @@ public class ActionHandler : MonoBehaviour
 	/// </summary>
 	private void CompleteAction()
 	{
+		//Remove the tile indicators.
+		for (int i = 0; i < tileIndicators.Count; i++)
+		{
+			Destroy(tileIndicators[i]);
+		}
+
 		//Remove action from gameobject.
 		GameObject actionGameObject = cardGameObject.transform.GetChild(0).GetChild(0).gameObject;
 		cardGameObject.transform.GetChild(0).GetChild(0).SetParent(null);
@@ -239,6 +450,12 @@ public class ActionHandler : MonoBehaviour
 			//Remove old card from hand.
 			cardHandler.RemoveCard(cardGameObject);
 		}
+
+		//Reset the card outline image.
+		cardOutlineImage.color = new Color(1f, 1f, 1f, 0f);
+		cardOutlineImage.transform.position = cardOulineDectivatedTransform.position;
+
+		enemyHandler.CommenceEnemyTurn();
 	}
 	#endregion
 	#endregion

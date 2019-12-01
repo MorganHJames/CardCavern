@@ -29,7 +29,7 @@ public class CardMover : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, 
 	/// <summary>
 	/// If all the cards can be moved around or not.
 	/// </summary>
-	private static bool canMove = true;
+	public static bool canMove = true;
 	#endregion
 	#region Public
 	/// <summary>

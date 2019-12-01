@@ -187,6 +187,100 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 22214187}
   m_CullTransparentMesh: 0
+--- !u!1 &103854392
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 103854393}
+  - component: {fileID: 103854396}
+  - component: {fileID: 103854395}
+  - component: {fileID: 103854394}
+  m_Layer: 5
+  m_Name: CardOutlineDeactivated
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &103854393
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 103854392}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 2.5, y: 2.5, z: 1}
+  m_Children: []
+  m_Father: {fileID: 244308096}
+  m_RootOrder: 3
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 64, y: 89}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!95 &103854394
+Animator:
+  serializedVersion: 3
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 103854392}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 7f20e2034fe601c4ebc418d3d20bb380, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorControllerStateOnDisable: 0
+--- !u!114 &103854395
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 103854392}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 0}
+  m_RaycastTarget: 0
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+    m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
+      Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+  m_Sprite: {fileID: 21300000, guid: ea2ec543ec94a144e8b691bda713bd04, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+--- !u!222 &103854396
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 103854392}
+  m_CullTransparentMesh: 0
 --- !u!1 &244308092
 GameObject:
   m_ObjectHideFlags: 0
@@ -280,6 +374,7 @@ RectTransform:
   - {fileID: 986684369}
   - {fileID: 1876740065}
   - {fileID: 2061958926}
+  - {fileID: 103854393}
   - {fileID: 412161362}
   m_Father: {fileID: 0}
   m_RootOrder: 2
@@ -289,6 +384,36 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!1 &247423554
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 247423555}
+  m_Layer: 0
+  m_Name: Enemies
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &247423555
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 247423554}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 551000040}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &360370497
 GameObject:
   m_ObjectHideFlags: 0
@@ -476,7 +601,7 @@ GameObject:
   - component: {fileID: 375851540}
   - component: {fileID: 375851539}
   m_Layer: 5
-  m_Name: EmptyHeart (2)
+  m_Name: EmptyHeart
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -573,7 +698,7 @@ RectTransform:
   - {fileID: 1269074302}
   - {fileID: 860563475}
   m_Father: {fileID: 244308096}
-  m_RootOrder: 3
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
@@ -614,6 +739,7 @@ GameObject:
   - component: {fileID: 551000040}
   - component: {fileID: 551000041}
   - component: {fileID: 551000042}
+  - component: {fileID: 551000043}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -631,7 +757,8 @@ Transform:
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 2.2990115, y: -6.8146815, z: 0.11396219}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
+  m_Children:
+  - {fileID: 247423555}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -648,12 +775,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   player: {fileID: 409954816353567736, guid: e1b1df9a468e1f142b339cca356bfbde, type: 3}
+  enemyPrefab: {fileID: 4523636804862168825, guid: ca5c2024f9d82f4469f84b7978de2901,
+    type: 3}
   cavernTile: {fileID: 11400000, guid: 84a99884319bce2448ed821b5fbaf440, type: 2}
   collisionTile: {fileID: 11400000, guid: c327817547c005c42924877012b8c8b9, type: 2}
   islandWidth: 11
   islandHeight: 11
   landTileMap: {fileID: 1564115453}
-  actionHandler: {fileID: 0}
+  actionHandler: {fileID: 551000042}
   hearthContainerTransform: {fileID: 412161362}
   collisionTileMap: {fileID: 360370499}
   playerController: {fileID: 0}
@@ -670,9 +799,30 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cardHandler: {fileID: 986684371}
+  cardOutlineImage: {fileID: 1876740066}
+  cardOulineDectivatedTransform: {fileID: 103854393}
+  enemyHandler: {fileID: 551000043}
   walkableTileIndicatorPrefab: {fileID: 2507389607313000930, guid: 2176337bfea029043b5690db528b2f42,
     type: 3}
+  meleeTileIndicatorPrefab: {fileID: 2507389607313000930, guid: 10e76af851fc5e44aaf1a3377f2ae84d,
+    type: 3}
+  boomerangTileIndicatorPrefab: {fileID: 2507389607313000930, guid: 677c608a5025f9b4babb2705c45f59c1,
+    type: 3}
+  pushTileIndicatorPrefab: {fileID: 2507389607313000930, guid: fd7366ef9fa938e4eab2ebfb28c6cb46,
+    type: 3}
   terrainGenerator: {fileID: 551000041}
+--- !u!114 &551000043
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 551000039}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6dd3bb0d5bc01a5478cc5f0746919177, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &583109153
 GameObject:
   m_ObjectHideFlags: 0
@@ -685,7 +835,7 @@ GameObject:
   - component: {fileID: 583109156}
   - component: {fileID: 583109155}
   m_Layer: 5
-  m_Name: EmptyHeart (1)
+  m_Name: EmptyHeart
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -760,7 +910,7 @@ GameObject:
   - component: {fileID: 860563477}
   - component: {fileID: 860563476}
   m_Layer: 5
-  m_Name: EmptyHeart (4)
+  m_Name: EmptyHeart
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -857,7 +1007,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 75}
   m_SizeDelta: {x: 0, y: 106.76}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &986684370
@@ -881,7 +1031,7 @@ MonoBehaviour:
   m_StartCorner: 1
   m_StartAxis: 0
   m_CellSize: {x: 128, y: 178}
-  m_Spacing: {x: -75, y: 0}
+  m_Spacing: {x: -45, y: 0}
   m_Constraint: 1
   m_ConstraintCount: 10
 --- !u!114 &986684371
@@ -896,7 +1046,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e318fcd37e4feee459119a06a370f7b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  turningAmount: 45
+  turningAmount: 25
   cardPrefab: {fileID: 2507389607313000930, guid: 4650bb128aa9c334ea17439154f49833,
     type: 3}
   positionChange: 100
@@ -910,6 +1060,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 56bb0a04264569e4da54d060a33f4c4a, type: 2}
   - {fileID: 11400000, guid: f0b9ffb2e123fea4a96c5f4f33ba2067, type: 2}
   - {fileID: 11400000, guid: 76460a97462d89e45a1c690f74c1f587, type: 2}
+  - {fileID: 11400000, guid: 7592c56fb3c86fb429237670e4d6194b, type: 2}
   canvas: {fileID: 244308095}
   actionHandler: {fileID: 551000042}
   cardOutlineImage: {fileID: 1876740066}
@@ -1074,7 +1225,7 @@ GameObject:
   - component: {fileID: 1269074304}
   - component: {fileID: 1269074303}
   m_Layer: 5
-  m_Name: EmptyHeart (3)
+  m_Name: EmptyHeart
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

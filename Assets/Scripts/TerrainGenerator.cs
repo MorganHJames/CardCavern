@@ -25,6 +25,12 @@ public class TerrainGenerator : MonoBehaviour
 	[SerializeField] private Transform player;
 
 	/// <summary>
+	/// The enemy prefab.
+	/// </summary>
+	[Tooltip("The enemy prefab.")]
+	[SerializeField] private Transform enemyPrefab;
+
+	/// <summary>
 	/// The Terrain Tile for the cavern land.
 	/// </summary>
 	[Tooltip("The Terrain Tile for the cabern land.")]
@@ -80,6 +86,12 @@ public class TerrainGenerator : MonoBehaviour
 	/// How far apart each cell is.
 	/// </summary>
 	private static float cellSpacing;
+
+	/// <summary>
+	/// The minimum distance between enemy spawns.
+	/// The lower the number the more enemies that will spawn.
+	/// </summary>
+	private float enemySpawnRate = 5f;
 	#endregion
 	#region Public
 	/// <summary>
@@ -110,10 +122,9 @@ public class TerrainGenerator : MonoBehaviour
 	private void SpawnLevel()
 	{
 		SpawnIsland(0, 0, 50, 1, cavernTile, TerrainType.TRLB);
-
 		SetupFullGrid();
-
 		SpawnPlayer();
+		SpawnEnemies();
 	}
 
 	/// <summary>
@@ -126,6 +137,47 @@ public class TerrainGenerator : MonoBehaviour
 		playerController = playerEntity.GetComponent<PlayerController>();
 		playerController.MoveToTile(WorldToGrid(playerEntity.position));
 		playerController.hearthContainerTransform = hearthContainerTransform;
+	}
+
+	/// <summary>
+	/// Spawns the enemies using poisson disk distribution on the valid terrain.
+	/// </summary>
+	private void SpawnEnemies()
+	{
+		PoissonDiscSampler sampler = new PoissonDiscSampler(grid.DimX, grid.DimY, enemySpawnRate);
+		List<Enemy> enemies = new List<Enemy>();
+
+		//Unblock the path to the player otherwise it will return as a path length of 0.
+		grid.UnblockCell(playerController.position);
+
+		foreach (Vector2 sample in sampler.Samples())
+		{
+			Vector3 potentialSpawn = new Vector3(sample.x - (0f - GridToWorld(new Position(0, 0)).x), sample.y - (0f - GridToWorld(new Position(0, 0)).y), 0);
+
+			if (WorldToGrid(potentialSpawn) != playerController.position && WorldToGrid(potentialSpawn).X < grid.DimX && WorldToGrid(potentialSpawn).X >= 0 && WorldToGrid(potentialSpawn).Y < grid.DimY && WorldToGrid(potentialSpawn).Y >= 0 && grid.GetCellCost(WorldToGrid(potentialSpawn)) <= 1)
+			{
+				//If path to player.
+				Position[] path = grid.GetPath(WorldToGrid(potentialSpawn), playerController.position);
+				if (path.Length > 1)
+				{
+					Transform newEnemy = Instantiate(enemyPrefab, potentialSpawn, Quaternion.identity);
+					newEnemy.parent = this.transform.GetChild(0).transform;
+					Enemy enemy = newEnemy.GetComponent<Enemy>();
+					enemy.position = WorldToGrid(potentialSpawn);
+					enemies.Add(enemy);
+				}
+			}
+		}
+
+		//Move the enemies later as they block the path for other enemies spawning for the check to the player.
+		foreach (Enemy enemy in enemies)
+		{
+			enemy.MoveToTile(enemy.position);
+		}
+
+		//Block the cell the player is on again.
+		grid.BlockCell(playerController.position);
+		EnemyHandler.enemies = enemies;
 	}
 
 	/// <summary>
@@ -164,6 +216,15 @@ public class TerrainGenerator : MonoBehaviour
 		int translateX = 0 - xMin + 1;
 		int translateY = 0 - yMin + 1;
 
+		//Blocks all cells to start.
+		for (int i = 0; i < grid.DimX; i++)
+		{
+			for (int k = 0; k < grid.DimY; k++)
+			{
+				grid.BlockCell(new Position(i, k));
+			}
+		}
+
 		//Adds the intraversible terrain to the grid.
 		for (int xIslandPos = xMin; xIslandPos < xMax; xIslandPos++)
 		{
@@ -173,10 +234,10 @@ public class TerrainGenerator : MonoBehaviour
 				{
 					for (int y = 0; y < islandHeight; y++)
 					{
-						if (!landTileMap.HasTile(new Vector3Int(x + (islandWidth * xIslandPos) - (islandWidth / 2), y + (islandHeight * yIslandPos) - (islandHeight / 2), 0)) || collisionTileMap.HasTile(new Vector3Int(x + (islandWidth * xIslandPos) - (islandWidth / 2), y + (islandHeight * yIslandPos) - (islandHeight / 2), 0)))
+						if (landTileMap.HasTile(new Vector3Int(x + (islandWidth * xIslandPos) - (islandWidth / 2), y + (islandHeight * yIslandPos) - (islandHeight / 2), 0)) && !collisionTileMap.HasTile(new Vector3Int(x + (islandWidth * xIslandPos) - (islandWidth / 2), y + (islandHeight * yIslandPos) - (islandHeight / 2), 0)))
 						{
-							//Blocks the cell
-							grid.BlockCell(new Position(x + (islandWidth * (xIslandPos + translateX)) - (islandWidth / 2), y + (islandHeight * (yIslandPos + translateY)) - (islandHeight / 2)));
+							//UnBlocks the cell
+							grid.UnblockCell(new Position(x + (islandWidth * (xIslandPos + translateX)) - (islandWidth / 2), y + (islandHeight * (yIslandPos + translateY)) - (islandHeight / 2)));
 						}
 					}
 				}

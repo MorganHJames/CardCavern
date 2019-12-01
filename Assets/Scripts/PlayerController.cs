@@ -52,25 +52,6 @@ public class PlayerController : Entity
 	}
 
 	/// <summary>
-	/// Changes the health of the player.
-	/// </summary>
-	/// <param name="healthChange">How much to change the health by.</param>
-	public void ChangeHealth(int healthChange)
-	{
-		health += healthChange;
-		if (health <= 0)
-		{
-			//Die
-		}
-		if (health > maxHealth)
-		{
-			health = maxHealth;
-		}
-
-		UpdateHealth();
-	}
-
-	/// <summary>
 	/// Updates the UI representing the players health.
 	/// </summary>
 	private void UpdateHealth()
@@ -157,6 +138,26 @@ public class PlayerController : Entity
 			spriteRenderer.flipX = true;
 		else if (direction > 0)
 			spriteRenderer.flipX = false;
+	}
+	#endregion
+	#region Public
+	/// <summary>
+	/// Changes the health of the player.
+	/// </summary>
+	/// <param name="healthChange">How much to change the health by.</param>
+	public void ChangeHealth(int healthChange)
+	{
+		health += healthChange;
+		if (health <= 0)
+		{
+			//Die
+		}
+		if (health > maxHealth)
+		{
+			health = maxHealth;
+		}
+
+		UpdateHealth();
 	}
 	#endregion
 	#endregion

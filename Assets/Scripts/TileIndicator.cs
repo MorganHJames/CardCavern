@@ -1,17 +1,17 @@
 ////////////////////////////////////////////////////////////
-// File: WalkableTileIndicator.cs
+// File: TileIndicator.cs
 // Author: Morgan Henry James
 // Date Created: 29-11-2019
-// Brief: Allows for the walkable tiles to be clicked and activate methods.
+// Brief: Allows for the clicking of tiles.
 //////////////////////////////////////////////////////////// 
 
 using UnityEngine;
 using UnityEngine.Events;
 
 /// <summary>
-/// Allows for the walkable tiles to be clicked and activate methods.
+/// Allows for the clicking of tiles.
 /// </summary>
-public class WalkableTileIndicator : MonoBehaviour
+public class TileIndicator : MonoBehaviour
 {
 	#region Variables
 	#region Public
@@ -28,22 +28,22 @@ public class WalkableTileIndicator : MonoBehaviour
 	[SerializeField] private SpriteRenderer spriteRenderer;
 
 	/// <summary>
-	/// The default sprite to show that the tile can be walked to.
+	/// The default sprite to show that the tile can be activated to.
 	/// </summary>
-	[Tooltip("The default sprite to show that the tile can be walked to.")]
+	[Tooltip("The default sprite to show that the tile can be activated to.")]
 	[SerializeField] private Sprite defaultSprite;
 
 	/// <summary>
-	/// The mouse enter sprite to show that the tile can be walked to.
+	/// The mouse enter sprite to show that the tile can be pressed to.
 	/// </summary>
-	[Tooltip("The mouse enter sprite to show that the tile can be walked to.")]
+	[Tooltip("The mouse enter sprite to show that the tile can be pressed to.")]
 	[SerializeField] private Sprite mouseEnterSprite;
 
 	/// <summary>
-	/// The walking icon game object to appear on button press.
+	/// The icon game object to appear on button press.
 	/// </summary>
-	[Tooltip("The walking icon game object to appear on button press.")]
-	[SerializeField] private GameObject walkingIcon;
+	[Tooltip("The icon game object to appear on button press.")]
+	[SerializeField] private GameObject icon;
 	#endregion
 	#endregion
 
@@ -54,7 +54,7 @@ public class WalkableTileIndicator : MonoBehaviour
 	/// </summary>
 	private void OnMouseDown()
 	{
-		walkingIcon.SetActive(true);
+		icon.SetActive(true);
 	}
 
 	/// <summary>
@@ -78,7 +78,7 @@ public class WalkableTileIndicator : MonoBehaviour
 	/// </summary>
 	private void OnMouseExit()
 	{
-		walkingIcon.SetActive(false);
+		icon.SetActive(false);
 		spriteRenderer.sprite = defaultSprite;
 	}
 	#endregion

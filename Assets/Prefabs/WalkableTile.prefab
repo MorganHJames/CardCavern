@@ -67,7 +67,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 8
   m_Sprite: {fileID: 21300628, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -182,11 +182,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 25a2cc759ba20bc47a1e1095ba298c66, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mouseDownEvent:
-    m_PersistentCalls:
-      m_Calls: []
-    m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine.CoreModule, Version=0.0.0.0,
-      Culture=neutral, PublicKeyToken=null
   mouseUpEvent:
     m_PersistentCalls:
       m_Calls: []
@@ -195,7 +190,7 @@ MonoBehaviour:
   spriteRenderer: {fileID: 2791332277252269709}
   defaultSprite: {fileID: 21300634, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
   mouseEnterSprite: {fileID: 21300638, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
-  walkingIcon: {fileID: 1405408782561368378}
+  icon: {fileID: 1405408782561368378}
 --- !u!61 &7807889454705112663
 BoxCollider2D:
   m_ObjectHideFlags: 0

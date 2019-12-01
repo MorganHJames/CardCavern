@@ -91,13 +91,16 @@
     <Compile Include="Assets\Scripts\CardCreator.cs" />
     <Compile Include="Assets\Scripts\CardHandler.cs" />
     <Compile Include="Assets\Scripts\CardMover.cs" />
+    <Compile Include="Assets\Scripts\Enemy.cs" />
+    <Compile Include="Assets\Scripts\EnemyHandler.cs" />
     <Compile Include="Assets\Scripts\Entity.cs" />
     <Compile Include="Assets\Scripts\FilledGrid.cs" />
     <Compile Include="Assets\Scripts\PlayerController.cs" />
+    <Compile Include="Assets\Scripts\PoissonDiscSampler.cs" />
     <Compile Include="Assets\Scripts\ScriptableObjects\Card.cs" />
     <Compile Include="Assets\Scripts\TerrainGenerator.cs" />
     <Compile Include="Assets\Scripts\TerrainTile.cs" />
-    <Compile Include="Assets\Scripts\WalkableTileIndicator.cs" />
+    <Compile Include="Assets\Scripts\TileIndicator.cs" />
     <None Include="Assets\2d-extras-master\Assets\Tilemap\Tiles\Rule Tile\ScriptTemplates\NewCustomRuleTile.cs.txt" />
     <None Include="Assets\TextMesh Pro\Resources\Shaders\TMP_SDF-Surface-Mobile.shader" />
     <None Include="Assets\TextMesh Pro\Resources\LineBreaking Leading Characters.txt" />
