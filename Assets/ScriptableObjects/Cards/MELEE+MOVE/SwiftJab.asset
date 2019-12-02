@@ -15,7 +15,7 @@ MonoBehaviour:
   name: Swift Jab
   uses: 3
   actions:
-  - amount: 2
+  - amount: 3
     actionType: 5
   - amount: 3
-    actionType: 0
+    actionType: 3

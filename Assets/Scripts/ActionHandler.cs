@@ -36,11 +36,6 @@ public class ActionHandler : MonoBehaviour
 	private GameObject cardGameObject;
 
 	/// <summary>
-	/// All of the active walkable tile indicator.
-	/// </summary>
-	private List<GameObject> tileIndicators = new List<GameObject>();
-
-	/// <summary>
 	/// The card Handler.
 	/// </summary>
 	[Tooltip("The card handler.")]
@@ -83,6 +78,18 @@ public class ActionHandler : MonoBehaviour
 	[SerializeField] private GameObject boomerangTileIndicatorPrefab;
 
 	/// <summary>
+	/// The bomb tile indicator prefab.
+	/// </summary>
+	[Tooltip("The bomb tile indicator prefab.")]
+	[SerializeField] private GameObject bombTileIndicatorPrefab;
+
+	/// <summary>
+	/// The damage tile indicator prefab.
+	/// </summary>
+	[Tooltip("The damage tile indicator prefab.")]
+	[SerializeField] private GameObject damageTileIndicatorPrefab;
+
+	/// <summary>
 	/// The push tile indicator prefab.
 	/// </summary>
 	[Tooltip("The push tile indicator prefab.")]
@@ -93,6 +100,17 @@ public class ActionHandler : MonoBehaviour
 	/// </summary>
 	[Tooltip("The terrain generator.")]
 	[SerializeField] private TerrainGenerator terrainGenerator;
+	#endregion
+	#region Public
+	/// <summary>
+	/// All of the active walkable tile indicator.
+	/// </summary>
+	public static List<GameObject> tileIndicators = new List<GameObject>();
+
+	/// <summary>
+	/// All of the damage indicators.
+	/// </summary>
+	public static List<EnemyTileIndicator> damageIndicators = new List<EnemyTileIndicator>();
 	#endregion
 	#endregion
 
@@ -125,7 +143,10 @@ public class ActionHandler : MonoBehaviour
 			yield return new WaitForSeconds(0.5f);
 
 			//Do the action
-			DoAction(tempCard.actions[0]);
+			if (tempCard.actions.Length > 0)
+			{
+				DoAction(tempCard.actions[0]);
+			}
 		}
 		else
 		{
@@ -144,17 +165,25 @@ public class ActionHandler : MonoBehaviour
 		{
 			case ActionTypes.MELEE:
 				//Spawn a melee indicator above, below, to the left and to the right of the player.
-				Position playerPos = terrainGenerator.playerController.position;
-				SpawnAttackIndicator(new Position(playerPos.X, playerPos.Y + 1), action.amount, meleeTileIndicatorPrefab);
-				SpawnAttackIndicator(new Position(playerPos.X, playerPos.Y - 1), action.amount, meleeTileIndicatorPrefab);
-				SpawnAttackIndicator(new Position(playerPos.X + 1, playerPos.Y), action.amount, meleeTileIndicatorPrefab);
-				SpawnAttackIndicator(new Position(playerPos.X - 1, playerPos.Y), action.amount, meleeTileIndicatorPrefab);
+				SpawnAttackIndicator(new Position(terrainGenerator.playerController.position.X, terrainGenerator.playerController.position.Y + 1), action.amount, meleeTileIndicatorPrefab);
+				SpawnAttackIndicator(new Position(terrainGenerator.playerController.position.X, terrainGenerator.playerController.position.Y - 1), action.amount, meleeTileIndicatorPrefab);
+				SpawnAttackIndicator(new Position(terrainGenerator.playerController.position.X + 1, terrainGenerator.playerController.position.Y), action.amount, meleeTileIndicatorPrefab);
+				SpawnAttackIndicator(new Position(terrainGenerator.playerController.position.X - 1, terrainGenerator.playerController.position.Y), action.amount, meleeTileIndicatorPrefab);
 				break;
 			case ActionTypes.HEAL:
 				terrainGenerator.playerController.ChangeHealth(action.amount);
 				CompleteAction();
 				break;
 			case ActionTypes.BOMB:
+				SpawnDamageIndicator(new Position(terrainGenerator.playerController.position.X, terrainGenerator.playerController.position.Y), action.amount, bombTileIndicatorPrefab);
+				SpawnDamageIndicator(new Position(terrainGenerator.playerController.position.X, terrainGenerator.playerController.position.Y + 1), action.amount, damageTileIndicatorPrefab);
+				SpawnDamageIndicator(new Position(terrainGenerator.playerController.position.X, terrainGenerator.playerController.position.Y - 1), action.amount, damageTileIndicatorPrefab);
+				SpawnDamageIndicator(new Position(terrainGenerator.playerController.position.X + 1, terrainGenerator.playerController.position.Y), action.amount, damageTileIndicatorPrefab);
+				SpawnDamageIndicator(new Position(terrainGenerator.playerController.position.X - 1, terrainGenerator.playerController.position.Y), action.amount, damageTileIndicatorPrefab);
+				SpawnDamageIndicator(new Position(terrainGenerator.playerController.position.X + 1, terrainGenerator.playerController.position.Y + 1), action.amount, damageTileIndicatorPrefab);
+				SpawnDamageIndicator(new Position(terrainGenerator.playerController.position.X - 1, terrainGenerator.playerController.position.Y + 1), action.amount, damageTileIndicatorPrefab);
+				SpawnDamageIndicator(new Position(terrainGenerator.playerController.position.X + 1, terrainGenerator.playerController.position.Y - 1), action.amount, damageTileIndicatorPrefab);
+				SpawnDamageIndicator(new Position(terrainGenerator.playerController.position.X - 1, terrainGenerator.playerController.position.Y - 1), action.amount, damageTileIndicatorPrefab);
 				CompleteAction();
 				break;
 			case ActionTypes.DAMAGE:
@@ -163,19 +192,18 @@ public class ActionHandler : MonoBehaviour
 				break;
 			case ActionTypes.RANGE:
 				//Spawn a boomerang indicators a tile away above, below, to the left and to the right of the player.
-				Position playerPosition = terrainGenerator.playerController.position;
-				SpawnAttackIndicator(new Position(playerPosition.X, playerPosition.Y + 2), action.amount, boomerangTileIndicatorPrefab);
-				SpawnAttackIndicator(new Position(playerPosition.X, playerPosition.Y - 2), action.amount, boomerangTileIndicatorPrefab);
-				SpawnAttackIndicator(new Position(playerPosition.X + 2, playerPosition.Y), action.amount, boomerangTileIndicatorPrefab);
-				SpawnAttackIndicator(new Position(playerPosition.X - 2, playerPosition.Y), action.amount, boomerangTileIndicatorPrefab);
-				SpawnAttackIndicator(new Position(playerPosition.X, playerPosition.Y + 3), action.amount, boomerangTileIndicatorPrefab);
-				SpawnAttackIndicator(new Position(playerPosition.X, playerPosition.Y - 3), action.amount, boomerangTileIndicatorPrefab);
-				SpawnAttackIndicator(new Position(playerPosition.X + 3, playerPosition.Y), action.amount, boomerangTileIndicatorPrefab);
-				SpawnAttackIndicator(new Position(playerPosition.X - 3, playerPosition.Y), action.amount, boomerangTileIndicatorPrefab);
-				SpawnAttackIndicator(new Position(playerPosition.X, playerPosition.Y + 4), action.amount, boomerangTileIndicatorPrefab);
-				SpawnAttackIndicator(new Position(playerPosition.X, playerPosition.Y - 4), action.amount, boomerangTileIndicatorPrefab);
-				SpawnAttackIndicator(new Position(playerPosition.X + 4, playerPosition.Y), action.amount, boomerangTileIndicatorPrefab);
-				SpawnAttackIndicator(new Position(playerPosition.X - 4, playerPosition.Y), action.amount, boomerangTileIndicatorPrefab);
+				SpawnAttackIndicator(new Position(terrainGenerator.playerController.position.X, terrainGenerator.playerController.position.Y + 2), action.amount, boomerangTileIndicatorPrefab);
+				SpawnAttackIndicator(new Position(terrainGenerator.playerController.position.X, terrainGenerator.playerController.position.Y - 2), action.amount, boomerangTileIndicatorPrefab);
+				SpawnAttackIndicator(new Position(terrainGenerator.playerController.position.X + 2, terrainGenerator.playerController.position.Y), action.amount, boomerangTileIndicatorPrefab);
+				SpawnAttackIndicator(new Position(terrainGenerator.playerController.position.X - 2, terrainGenerator.playerController.position.Y), action.amount, boomerangTileIndicatorPrefab);
+				SpawnAttackIndicator(new Position(terrainGenerator.playerController.position.X, terrainGenerator.playerController.position.Y + 3), action.amount, boomerangTileIndicatorPrefab);
+				SpawnAttackIndicator(new Position(terrainGenerator.playerController.position.X, terrainGenerator.playerController.position.Y - 3), action.amount, boomerangTileIndicatorPrefab);
+				SpawnAttackIndicator(new Position(terrainGenerator.playerController.position.X + 3, terrainGenerator.playerController.position.Y), action.amount, boomerangTileIndicatorPrefab);
+				SpawnAttackIndicator(new Position(terrainGenerator.playerController.position.X - 3, terrainGenerator.playerController.position.Y), action.amount, boomerangTileIndicatorPrefab);
+				SpawnAttackIndicator(new Position(terrainGenerator.playerController.position.X, terrainGenerator.playerController.position.Y + 4), action.amount, boomerangTileIndicatorPrefab);
+				SpawnAttackIndicator(new Position(terrainGenerator.playerController.position.X, terrainGenerator.playerController.position.Y - 4), action.amount, boomerangTileIndicatorPrefab);
+				SpawnAttackIndicator(new Position(terrainGenerator.playerController.position.X + 4, terrainGenerator.playerController.position.Y), action.amount, boomerangTileIndicatorPrefab);
+				SpawnAttackIndicator(new Position(terrainGenerator.playerController.position.X - 4, terrainGenerator.playerController.position.Y), action.amount, boomerangTileIndicatorPrefab);
 				break;
 			case ActionTypes.MOVE:
 				TerrainGenerator.grid.UnblockCell(terrainGenerator.playerController.position);
@@ -225,15 +253,18 @@ public class ActionHandler : MonoBehaviour
 				}
 				break;
 			case ActionTypes.DRAW:
+				for (int i = 0; i < action.amount; i++)
+				{
+					cardHandler.DrawCard();
+				}
 				CompleteAction();
 				break;
 			case ActionTypes.PUSH:
 				//Spawn a push indicator above, below, to the left and to the right of the player.
-				Position playerPositioning = terrainGenerator.playerController.position;
-				SpawnPushIndicator(new Position(playerPositioning.X, playerPositioning.Y + 1), action.amount, playerPositioning);
-				SpawnPushIndicator(new Position(playerPositioning.X, playerPositioning.Y - 1), action.amount, playerPositioning);
-				SpawnPushIndicator(new Position(playerPositioning.X + 1, playerPositioning.Y), action.amount, playerPositioning);
-				SpawnPushIndicator(new Position(playerPositioning.X - 1, playerPositioning.Y), action.amount, playerPositioning);
+				SpawnPushIndicator(new Position(terrainGenerator.playerController.position.X, terrainGenerator.playerController.position.Y + 1), action.amount);
+				SpawnPushIndicator(new Position(terrainGenerator.playerController.position.X, terrainGenerator.playerController.position.Y - 1), action.amount);
+				SpawnPushIndicator(new Position(terrainGenerator.playerController.position.X + 1, terrainGenerator.playerController.position.Y), action.amount);
+				SpawnPushIndicator(new Position(terrainGenerator.playerController.position.X - 1, terrainGenerator.playerController.position.Y), action.amount);
 				break;
 			default:
 				break;
@@ -271,12 +302,40 @@ public class ActionHandler : MonoBehaviour
 	}
 
 	/// <summary>
+	/// Spawns a damage indicator showing that both the player and the enemy will take damage if standing on this tile.
+	/// </summary>
+	/// <param name="position">Where to spawn the tile indicator.</param>
+	/// <param name="damage">How much damage to do on activation.</param>
+	/// <param name="indicator">The indicator to spawn.</param>
+	private void SpawnDamageIndicator(Position position, int damage, GameObject indicator)
+	{
+		GameObject damageIndicator = Instantiate(indicator);
+		damageIndicator.transform.parent = this.transform;
+		damageIndicator.transform.position = TerrainGenerator.GridToWorld(position);
+		EnemyTileIndicator enemyTileIndicator = damageIndicator.GetComponent<EnemyTileIndicator>();
+		damageIndicators.Add(enemyTileIndicator);
+		enemyTileIndicator.action.AddListener(() =>
+		{
+			for (int i = EnemyHandler.enemies.Count - 1; i > -1; i--)
+			{
+				if (EnemyHandler.enemies[i].position == position)
+				{
+					EnemyHandler.enemies[i].ChangeHealth(-damage);
+				}
+			}
+			if (terrainGenerator.playerController.position == position)
+			{
+				terrainGenerator.playerController.ChangeHealth(-damage);
+			}
+		});
+	}
+
+	/// <summary>
 	/// Spawn a push tile indicator in.
 	/// </summary>
 	/// <param name="position">The position of the spawn indicator.</param>
 	/// <param name="pushDistance">How far to push the enemy</param>
-	/// <param name="playerPosition">Where the player is.</param>
-	private void SpawnPushIndicator(Position position, int pushDistance, Position playerPosition)
+	private void SpawnPushIndicator(Position position, int pushDistance)
 	{
 		GameObject tileIndicator = Instantiate(pushTileIndicatorPrefab);
 		tileIndicator.transform.parent = this.transform;
@@ -289,7 +348,7 @@ public class ActionHandler : MonoBehaviour
 			{
 				if (enemy.position == position)
 				{
-					if (position == new Position(playerPosition.X, playerPosition.Y + 1))
+					if (position == new Position(terrainGenerator.playerController.position.X, terrainGenerator.playerController.position.Y + 1))
 					{
 						//Push enemy up.
 						bool pushed = false;
@@ -316,7 +375,7 @@ public class ActionHandler : MonoBehaviour
 							enemy.PushedToTile(new Position(position.X, position.Y + pushDistance));
 						}
 					}
-					if (position == new Position(playerPosition.X, playerPosition.Y - 1))
+					if (position == new Position(terrainGenerator.playerController.position.X, terrainGenerator.playerController.position.Y - 1))
 					{
 						//Push enemy down.
 						bool pushed = false;
@@ -343,7 +402,7 @@ public class ActionHandler : MonoBehaviour
 							enemy.PushedToTile(new Position(position.X, position.Y - pushDistance));
 						}
 					}
-					if (position == new Position(playerPosition.X + 1, playerPosition.Y))
+					if (position == new Position(terrainGenerator.playerController.position.X + 1, terrainGenerator.playerController.position.Y))
 					{
 						//Push enemy right.
 						bool pushed = false;
@@ -370,7 +429,7 @@ public class ActionHandler : MonoBehaviour
 							enemy.PushedToTile(new Position(position.X + pushDistance, position.Y));
 						}
 					}
-					if (position == new Position(playerPosition.X - 1, playerPosition.Y))
+					if (position == new Position(terrainGenerator.playerController.position.X - 1, terrainGenerator.playerController.position.Y))
 					{
 						//Push enemy left.
 						bool pushed = false;
@@ -451,11 +510,11 @@ public class ActionHandler : MonoBehaviour
 		}
 		else
 		{
-			//Add used card to hand.
-			cardHandler.AddCard(tempCard);
-
 			//Remove old card from hand.
 			cardHandler.RemoveCard(cardGameObject);
+
+			//Add used card to hand.
+			cardHandler.AddCard(tempCard);
 		}
 
 		//Reset the card outline image.

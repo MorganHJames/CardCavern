@@ -57,8 +57,17 @@ public class EnemyHandler : MonoBehaviour
 			{
 				enemy.HandleTurn(terrainGenerator.playerController);
 			}
+
 			//Go back to players turn.
 			CardMover.canMove = true;
+
+			for (int i = ActionHandler.damageIndicators.Count - 1; i > -1; i--)
+			{
+				EnemyTileIndicator enemyTileIndicator = ActionHandler.damageIndicators[i];
+				enemyTileIndicator.ActivateAction();
+				ActionHandler.damageIndicators.Remove(enemyTileIndicator);
+				Destroy(enemyTileIndicator.gameObject);
+			}
 		}
 	}
     #endregion

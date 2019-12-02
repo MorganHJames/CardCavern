@@ -30,6 +30,11 @@ public class CardMover : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, 
 	/// If all the cards can be moved around or not.
 	/// </summary>
 	public static bool canMove = true;
+
+	/// <summary>
+	/// If all the cards are being discarded or not.
+	/// </summary>
+	public static bool discarding = false;
 	#endregion
 	#region Public
 	/// <summary>
@@ -56,6 +61,11 @@ public class CardMover : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, 
 	/// The card outline activated transform.
 	/// </summary>
 	[HideInInspector] public Transform cardOulineActivatedTransform;
+
+	/// <summary>
+	/// The card outline deactivated transform.
+	/// </summary>
+	[HideInInspector] public Transform cardOulineDeactivatedTransform;
 
 	/// <summary>
 	/// The card scriptable object to populate the gameobject with.
@@ -85,7 +95,7 @@ public class CardMover : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, 
 	/// <param name="eventData"></param>
 	public void OnDrag(PointerEventData eventData)
 	{
-		if (canMove)
+		if (canMove || (discarding && !cardActivated))
 		{
 			RectTransformUtility.ScreenPointToLocalPointInRectangle(canvas.transform as RectTransform, Input.mousePosition, canvas.worldCamera, out target);
 			transform.position = canvas.transform.TransformPoint(target);
@@ -99,7 +109,7 @@ public class CardMover : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, 
 	/// <param name="eventData"></param>
 	public void OnPointerDown(PointerEventData eventData)
 	{
-		if (canMove)
+		if (canMove || (discarding && !cardActivated))
 		{
 			transform.rotation = Quaternion.Euler(Vector3.zero);
 			transform.localScale = new Vector3(1.25f, 1.25f);
@@ -112,16 +122,24 @@ public class CardMover : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, 
 	/// <param name="eventData"></param>
 	public void OnPointerUp(PointerEventData eventData)
 	{
-		if (canMove)
+		if (canMove || (discarding && !cardActivated))
 		{
 			if (50f > Vector3.Distance(cardOutlineImage.transform.position, transform.position))
 			{
-				canMove = false;
-				cardActivated = true;
-				transform.position = cardOutlineImage.transform.position;
+				if (canMove && !discarding)
+				{
+					canMove = false;
+					cardActivated = true;
+					transform.position = cardOutlineImage.transform.position;
 
-				//Start the handling of the cards actions.
-				actionHandler.CardActivated(card, gameObject);
+					//Start the handling of the cards actions.
+					actionHandler.CardActivated(card, gameObject);
+				}
+				else
+				{
+					transform.position = cardOulineDeactivatedTransform.transform.position;
+					cardHandler.RemoveCard(gameObject);
+				}
 			}
 			else
 			{

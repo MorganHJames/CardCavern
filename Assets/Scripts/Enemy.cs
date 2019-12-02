@@ -54,6 +54,12 @@ public class Enemy : Entity
 	/// </summary>
 	private PlayerController playerController;
 	#endregion
+	#region Public
+	/// <summary>
+	/// The card handler.
+	/// </summary>
+	[HideInInspector] public CardHandler cardHandler;
+	#endregion
 	#endregion
 
 	#region Methods
@@ -329,19 +335,18 @@ public class Enemy : Entity
 	/// </summary>
 	public void ResolveAttack(bool justClear = false)
 	{
-		for (int i = 0; i < enemyTileIndicators.Count; i++)
+		for (int i = enemyTileIndicators.Count - 1; i > -1; i--)
 		{
+			//Get the tile gameobject to delete before removing it from the list.
+			GameObject enemyTileIndicatorToDelete = enemyTileIndicators[i].gameObject;
+
 			if (!justClear)
 			{
 				//Activate tiles.
 				enemyTileIndicators[i].ActivateAction();
+				//Remove from list.
+				enemyTileIndicators.RemoveAt(i);
 			}
-
-			//Get the tile gameobject to delete before removing it from the list.
-			GameObject enemyTileIndicatorToDelete = enemyTileIndicators[i].gameObject;
-
-			//Remove from list.
-			enemyTileIndicators.Remove(enemyTileIndicators[i]);
 
 			//Delete the tile
 			Destroy(enemyTileIndicatorToDelete);
@@ -357,7 +362,8 @@ public class Enemy : Entity
 		health += healthChange;
 		if (health <= 0)
 		{
-			//Die
+			cardHandler.DrawCard();
+			//Die.
 			EnemyHandler.enemies.Remove(this);
 			TerrainGenerator.grid.UnblockCell(position);
 			Destroy(this.gameObject);

@@ -172,6 +172,8 @@ public class PlayerController : Entity
 			{
 				enemy.ResolveAttack(true);
 			}
+
+			CardMover.canMove = false;
 		}
 		if (health > maxHealth)
 		{

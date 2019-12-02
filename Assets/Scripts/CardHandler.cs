@@ -35,16 +35,51 @@ public class CardHandler : MonoBehaviour
 	[SerializeField] private GameObject cardPrefab;
 
 	/// <summary>
+	/// The discard overlay.
+	/// </summary>
+	[Tooltip("The discard overlay.")]
+	[SerializeField] private GameObject discardOverlay;
+
+	/// <summary>
 	/// How much the cards can move.
 	/// </summary>
 	[Tooltip("How much the cards can move.")]
 	[SerializeField] private float positionChange = 300f;
 
 	/// <summary>
-	/// The cards the user will start off with.
+	/// All the cards the player can draw with their respective weights.
 	/// </summary>
-	[Tooltip("The cards the user will start off with.")]
-	[SerializeField] private Card[] startingCards;
+	[Tooltip("All the cards the player can draw with their respective weights.")]
+	[SerializeField] private CardWithWeight[] cardPool;
+
+	/// <summary>
+	/// The guaranteed starting movement.
+	/// </summary>
+	[Tooltip("The guaranteed starting movement.")]
+	[SerializeField] private Card startingMovement;
+
+	/// <summary>
+	/// The guaranteed starting attack.
+	/// </summary>
+	[Tooltip("The guaranteed starting attack.")]
+	[SerializeField] private Card startingAttack;
+
+	/// <summary>
+	/// How many cards the user starts with not including the two default cards.
+	/// </summary>
+	[Tooltip("How many cards the user starts with not including the two default cards.")]
+	[SerializeField] private int startCardCount;
+
+	/// <summary>
+	/// How many cards the user can have maximum.
+	/// </summary>
+	[Tooltip("How many cards the user can have maximum.")]
+	[SerializeField] private int maxHandSize;
+
+	/// <summary>
+	/// The total weight of choosing any card.
+	/// </summary>
+	private float totalCardPoolWeight;
 
 	/// <summary>
 	/// The canvas that the card is on.
@@ -59,6 +94,12 @@ public class CardHandler : MonoBehaviour
 	[SerializeField] private ActionHandler actionHandler;
 
 	/// <summary>
+	/// The terrain generator.
+	/// </summary>
+	[Tooltip("The terrain generator.")]
+	[SerializeField] private TerrainGenerator terrainGenerator;
+
+	/// <summary>
 	/// The card outline image.
 	/// </summary>
 	[Tooltip("The card outline image.")]
@@ -69,22 +110,81 @@ public class CardHandler : MonoBehaviour
 	/// </summary>
 	[Tooltip("The card outline activated transform.")]
 	[SerializeField] private Transform cardOulineActivatedTransform;
+
+
+	/// <summary>
+	/// The card outline deactivated transform.
+	/// </summary>
+	[Tooltip("The card outline deactivated transform.")]
+	[SerializeField] private Transform cardOulineDeactivatedTransform;
 	#endregion
+	#endregion
+
+	#region Structures
+	/// <summary>
+	/// A card and it's weight in being drawn.
+	/// </summary>
+	[System.Serializable]
+	public struct CardWithWeight
+	{
+		public Card card;
+		public float weight;
+	}
 	#endregion
 
 	#region Methods
 	#region Private
+	/// <summary>
+	/// When adding a card to the card pool update the total weight.
+	/// </summary>
+	private void OnValidate()
+	{
+		if (cardPool != null)
+		{
+			totalCardPoolWeight = 0f;
+			foreach (CardWithWeight cardWithWeight in cardPool)
+			{
+				totalCardPoolWeight += cardWithWeight.weight;
+			}
+		}
+	}
+
 	/// <summary>
 	/// Gets the components needed and updates the rotation and position of the cards in the players hand on start.
 	/// </summary>
 	private void Start()
 	{
 		gridLayoutGroup = GetComponent<GridLayoutGroup>();
+		AddCard(startingAttack);
+		AddCard(startingMovement);
 
-		foreach (Card card in startingCards)
+		for (int i = 0; i < startCardCount; i++)
 		{
-			AddCard(card);
+			AddCard(PickACard());
 		}
+	}
+
+	/// <summary>
+	/// Picks a card from the pool based on the weights of the cards.
+	/// </summary>
+	/// <returns>The Choosen card.</returns>
+	private Card PickACard()
+	{
+		//Pick a random card based on weight.
+		//Generate a random position in the list.
+		float pick = Random.value * totalCardPoolWeight;
+		int chosenIndex = 0;
+		float cumulativeWeight = cardPool[0].weight;
+
+		//Step through the list until we've accumulated more weight than this.
+		//The length check is for safety in case rounding errors accumulate.
+		while (pick > cumulativeWeight && chosenIndex < cardPool.Length - 1)
+		{
+			chosenIndex++;
+			cumulativeWeight += cardPool[chosenIndex].weight;
+		}
+
+		return cardPool[chosenIndex].card;
 	}
 
 	/// <summary>
@@ -92,7 +192,7 @@ public class CardHandler : MonoBehaviour
 	/// </summary>
 	/// <param name="value">The value to remap.</param>
 	/// <param name="from1">The previous lower bound.</param>
-	/// <param name="to1">The previous upper bound.</param>
+	/// <param name="to1">The previousupper bound.</param>
 	/// <param name="from2">The new lower bound.</param>
 	/// <param name="to2">The new upper bound.</param>
 	/// <returns>The remapped value.</returns>
@@ -100,9 +200,30 @@ public class CardHandler : MonoBehaviour
 	{
 		return (value - from1) / (to1 - from1) * (to2 - from2) + from2;
 	}
+
+	/// <summary>
+	/// Stop discarding cards.
+	/// </summary>
+	private void StopDiscarding()
+	{
+		//Show the blocker.
+		discardOverlay.SetActive(false);
+
+		//Turn off all tile indicators.
+		foreach (EnemyTileIndicator enemyTileIndicator in ActionHandler.damageIndicators)
+		{
+			enemyTileIndicator.enabled = true;
+		}
+
+		foreach (GameObject tileIndicator in ActionHandler.tileIndicators)
+		{
+			tileIndicator.GetComponent<TileIndicator>().enabled = true;
+		}
+		CardMover.discarding = false;
+	}
 	#endregion
 	#region Public
-	/// <summary>
+	/// <summary> 
 	/// Updates the rotation and position of the cards in the players hand.
 	/// </summary>
 	public IEnumerator UpdateRotationAndPosition()
@@ -114,7 +235,6 @@ public class CardHandler : MonoBehaviour
 
 		//Having the grid enabled stops cards from being able to move up or down.
 		gridLayoutGroup.enabled = false;
-
 
 		float incrementAmount = turningAmount / (transform.childCount / 2);
 		float position = 1f / transform.childCount;
@@ -164,6 +284,18 @@ public class CardHandler : MonoBehaviour
 				child.position = new Vector3(child.position.x, Mathf.Sin(1) * positionChange, child.position.z);
 			}
 		}
+
+		foreach (Transform child in transform)
+		{
+			if (child.GetComponent<CardMover>().cardActivated)
+			{
+				child.position = cardOulineActivatedTransform.position;
+				child.rotation = cardOulineActivatedTransform.rotation;
+				child.localScale = new Vector3(1.25f, 1.25f);
+				//Early out.
+				break;
+			}
+		}
 	}
 
 	/// <summary>
@@ -187,9 +319,37 @@ public class CardHandler : MonoBehaviour
 		cardMover.cardOulineActivatedTransform = cardOulineActivatedTransform;
 		cardMover.card = card;
 		cardMover.actionHandler = actionHandler;
+		cardMover.cardOulineDeactivatedTransform = cardOulineDeactivatedTransform;
 
 		//Update layout.
 		StartCoroutine(UpdateRotationAndPosition());
+
+		if (transform.childCount > maxHandSize)
+		{
+			//Show the blocker.
+			discardOverlay.SetActive(true);
+
+			//Turn off all tile indicators.
+			foreach (EnemyTileIndicator enemyTileIndicator in ActionHandler.damageIndicators)
+			{
+				enemyTileIndicator.enabled = false;
+			}
+
+			foreach (GameObject tileIndicator in ActionHandler.tileIndicators)
+			{
+				tileIndicator.GetComponent<TileIndicator>().enabled = false;
+			}
+
+			CardMover.discarding = true;
+		}
+	}
+
+	/// <summary>
+	/// Draws a random card.
+	/// </summary>
+	public void DrawCard()
+	{
+		AddCard(PickACard());
 	}
 
 	/// <summary>
@@ -200,11 +360,21 @@ public class CardHandler : MonoBehaviour
 		//Destroy card.
 		Destroy(cardGameObject);
 
-		//If no cards == die;
-		//else
+		if (!(transform.childCount > maxHandSize))
+		{
+			StopDiscarding();
+		}
 
-		//Update remaining cards.
-		StartCoroutine(UpdateRotationAndPosition());
+		//If no cards == die;
+		if (transform.childCount == 0)
+		{
+			terrainGenerator.playerController.ChangeHealth(-terrainGenerator.playerController.maxHealth);
+		}
+		else
+		{
+			//Update remaining cards.
+			StartCoroutine(UpdateRotationAndPosition());
+		}
 	}
 	#endregion
 	#endregion

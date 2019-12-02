@@ -73,6 +73,12 @@ public class TerrainGenerator : MonoBehaviour
 	[SerializeField] private Tilemap collisionTileMap;
 
 	/// <summary>
+	/// The card handler.
+	/// </summary>
+	[Tooltip("The card handler.")]
+	[SerializeField] private CardHandler cardHandler;
+
+	/// <summary>
 	/// A list of all the currently spawned islands for easy lookup.
 	/// </summary>
 	private List<SpawnedIsland> SpawnedIslands = new List<SpawnedIsland>();
@@ -133,9 +139,14 @@ public class TerrainGenerator : MonoBehaviour
 	private void SpawnPlayer()
 	{
 		Transform playerEntity = Instantiate(player);
-		playerEntity.position = new Vector3(2.82f, -6.39f, 0f);
+		playerEntity.position = new Vector3(2.82f, -6.35f, 0f);
 		playerController = playerEntity.GetComponent<PlayerController>();
-		playerController.MoveToTile(WorldToGrid(playerEntity.position));
+		Position proposedPlayerSpawn = WorldToGrid(playerEntity.position);
+		while (grid.GetCellCost(proposedPlayerSpawn) > 1)
+		{
+			proposedPlayerSpawn = new Position(proposedPlayerSpawn.X, proposedPlayerSpawn.Y + 1);
+		}
+		playerController.MoveToTile(proposedPlayerSpawn);
 		playerController.hearthContainerTransform = hearthContainerTransform;
 	}
 
@@ -158,11 +169,13 @@ public class TerrainGenerator : MonoBehaviour
 			{
 				//If path to player.
 				Position[] path = grid.GetPath(WorldToGrid(potentialSpawn), playerController.position);
+
 				if (path.Length > 1)
 				{
 					Transform newEnemy = Instantiate(enemyPrefab, potentialSpawn, Quaternion.identity);
 					newEnemy.parent = this.transform.GetChild(0).transform;
 					Enemy enemy = newEnemy.GetComponent<Enemy>();
+					enemy.cardHandler = cardHandler;
 					enemy.position = WorldToGrid(potentialSpawn);
 					enemies.Add(enemy);
 				}
