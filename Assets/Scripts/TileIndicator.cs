@@ -55,6 +55,7 @@ public class TileIndicator : MonoBehaviour
 	private void OnMouseDown()
 	{
 		icon.SetActive(true);
+		CardMover.moving = true;
 	}
 
 	/// <summary>
@@ -71,6 +72,15 @@ public class TileIndicator : MonoBehaviour
 	private void OnMouseUpAsButton()
 	{
 		mouseUpEvent.Invoke();
+		CardMover.moving = false;
+	}
+
+	/// <summary>
+	/// When the mouse is up allow panning again.
+	/// </summary>
+	private void OnMouseUp()
+	{
+		CardMover.moving = false;
 	}
 
 	/// <summary>

@@ -95,13 +95,14 @@ public class ActionHandler : MonoBehaviour
 	[Tooltip("The push tile indicator prefab.")]
 	[SerializeField] private GameObject pushTileIndicatorPrefab;
 
+	#endregion
+	#region Public
 	/// <summary>
 	/// The terrain generator.
 	/// </summary>
 	[Tooltip("The terrain generator.")]
-	[SerializeField] private TerrainGenerator terrainGenerator;
-	#endregion
-	#region Public
+	[SerializeField] public TerrainGenerator terrainGenerator;
+
 	/// <summary>
 	/// All of the active walkable tile indicator.
 	/// </summary>

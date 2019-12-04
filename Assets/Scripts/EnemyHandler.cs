@@ -27,18 +27,35 @@ public class EnemyHandler : MonoBehaviour
 	/// </summary>
 	[HideInInspector]
 	static public List<Enemy> enemies = new List<Enemy>();
-    #endregion
-    #endregion
-    
-    #region Methods
-    #region Private
-    
-    #endregion
-    #region Public
+	#endregion
+	#endregion
+
+	#region Methods
+	#region Private
+	/// <summary>
+	/// Invokes the enemy check.
+	/// </summary>
+	private void Start()
+	{
+		Invoke("CheckIfEnemies", 0.1f);
+	}
+
+	/// <summary>
+	/// If no enemies spawn go to next level.
+	/// </summary>
+	private void CheckIfEnemies()
+	{
+		if (enemies.Count == 0)
+		{
+			PlayerData.NextFloor(false);
+		}
+	}
+	#endregion
+	#region Public
 	/// <summary>
 	/// Takes the enemy turn.
 	/// </summary>
-    public void CommenceEnemyTurn()
+	public void CommenceEnemyTurn()
 	{
 		foreach (Enemy enemy in enemies)
 		{

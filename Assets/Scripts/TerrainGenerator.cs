@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using RoyT.AStar;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// Used to generate islands for specific room types for dungeon generation use.
@@ -23,6 +24,12 @@ public class TerrainGenerator : MonoBehaviour
 	/// </summary>
 	[Tooltip("The player prefab.")]
 	[SerializeField] private Transform player;
+
+	/// <summary>
+	/// The player prefab with no camera.
+	/// </summary>
+	[Tooltip("The player prefab with no camera.")]
+	[SerializeField] private Transform playerNoCamera;
 
 	/// <summary>
 	/// The enemy prefab.
@@ -67,6 +74,12 @@ public class TerrainGenerator : MonoBehaviour
 	[SerializeField] private Transform hearthContainerTransform;
 
 	/// <summary>
+	///The game over handler.
+	/// </summary>
+	[Tooltip("The game over handler.")]
+	[SerializeField] private GameOverHandler gameOverHandler;
+
+	/// <summary>
 	/// The tile map for the collisions to be put onto.
 	/// </summary>
 	[Tooltip("The tile map for the collisions to be put onto.")]
@@ -98,6 +111,16 @@ public class TerrainGenerator : MonoBehaviour
 	/// The lower the number the more enemies that will spawn.
 	/// </summary>
 	private float enemySpawnRate = 5f;
+
+	/// <summary>
+	/// The current amount of rooms.
+	/// </summary>
+	private int currentRooms = 0;
+
+	/// <summary>
+	/// The max number of rooms to spawn as any above this can stop enemies from spawning.
+	/// </summary>
+	private int maxRooms = 20;
 	#endregion
 	#region Public
 	/// <summary>
@@ -119,7 +142,14 @@ public class TerrainGenerator : MonoBehaviour
 	/// </summary>
 	private void Start()
 	{
-		Invoke("SpawnLevel", 0.5f);
+		if (SceneManager.GetActiveScene().name == "MenuScene")
+		{
+			Invoke("SpawnDummyLevel", 0.1f);
+		}
+		else if (SceneManager.GetActiveScene().name == "BaseScene")
+		{
+			Invoke("SpawnLevel", 0.1f);
+		}
 	}
 
 	/// <summary>
@@ -129,16 +159,42 @@ public class TerrainGenerator : MonoBehaviour
 	{
 		SpawnIsland(0, 0, 50, 1, cavernTile, TerrainType.TRLB);
 		SetupFullGrid();
-		SpawnPlayer();
+		SpawnPlayer(player);
 		SpawnEnemies();
+	}
+
+	/// <summary>
+	/// Spawns the terrain but without the player.
+	/// </summary>
+	private void SpawnDummyLevel()
+	{
+		SpawnIsland(0, 0, 50, 1, cavernTile, TerrainType.TRLB);
+		SetupFullGrid();
+		MoveCameraToPlayerStartPoint();
+		SpawnPlayer(playerNoCamera);
+		SpawnEnemies();
+	}
+
+	/// <summary>
+	/// Moves the camera to where the player would usually start.
+	/// </summary>
+	private void MoveCameraToPlayerStartPoint()
+	{
+		Position proposedPlayerSpawn = WorldToGrid(new Vector3(2.82f, -6.35f, 0f));
+		while (grid.GetCellCost(proposedPlayerSpawn) > 1)
+		{
+			proposedPlayerSpawn = new Position(proposedPlayerSpawn.X, proposedPlayerSpawn.Y + 1);
+		}
+		Camera.main.transform.position = TerrainGenerator.GridToWorld(proposedPlayerSpawn);
 	}
 
 	/// <summary>
 	/// Spawns in the player in the closest tile to the bottom left as possible.
 	/// </summary>
-	private void SpawnPlayer()
+	/// <param name="playerPrefab">The player prefab.</param>
+	private void SpawnPlayer(Transform playerPrefab)
 	{
-		Transform playerEntity = Instantiate(player);
+		Transform playerEntity = Instantiate(playerPrefab);
 		playerEntity.position = new Vector3(2.82f, -6.35f, 0f);
 		playerController = playerEntity.GetComponent<PlayerController>();
 		Position proposedPlayerSpawn = WorldToGrid(playerEntity.position);
@@ -147,6 +203,12 @@ public class TerrainGenerator : MonoBehaviour
 			proposedPlayerSpawn = new Position(proposedPlayerSpawn.X, proposedPlayerSpawn.Y + 1);
 		}
 		playerController.MoveToTile(proposedPlayerSpawn);
+
+		if (playerPrefab == playerNoCamera)
+		{
+			Camera.main.GetComponent<MoveInCircle>().center = new Vector3(GridToWorld(proposedPlayerSpawn).x, GridToWorld(proposedPlayerSpawn).y, -1f);
+		}
+		playerController.gameOverHandler = gameOverHandler;
 		playerController.hearthContainerTransform = hearthContainerTransform;
 	}
 
@@ -316,13 +378,16 @@ public class TerrainGenerator : MonoBehaviour
 	/// <param name="terrainType">The type of island the island should be which dictates here the entrances to the island are located.</param>
 	private void SpawnIsland(int xPos, int yPos, int fillAmount, int smoothPasses, TerrainTile terrainTile, TerrainType terrainType)
 	{
-		//Create an island.
-		CreateIsland(xPos, yPos, fillAmount, smoothPasses, terrainTile, terrainType);
+		if (currentRooms < maxRooms)
+		{
+			//Create an island.
+			CreateIsland(xPos, yPos, fillAmount, smoothPasses, terrainTile, terrainType);
+			currentRooms++;
 
-		//The next part checks what islands the just spawned island needs to be spawned and then does so.
+			//The next part checks what islands the just spawned island needs to be spawned and then does so.
 
-		//If the island has a top entrance and there is no island spawned above.
-		if (terrainType.ToString().Contains("T") && !IsIslandSpawned(xPos, yPos + 1))
+			//If the island has a top entrance and there is no island spawned above.
+			if (terrainType.ToString().Contains("T") && !IsIslandSpawned(xPos, yPos + 1))
 			{
 				//Create a list of chars that indicate the entrances needed for the new island.
 				List<char> entrancesNeeded = new List<char>();
@@ -331,7 +396,7 @@ public class TerrainGenerator : MonoBehaviour
 				entrancesNeeded.Add('B');
 
 				//Check if there is an Island two terrain tiles above and see if it has a bottom entrance.
-				if (IsIslandSpawned(xPos, yPos + 2) && GetIslandTerrainType(xPos, yPos +2).ToString().Contains("B"))
+				if (IsIslandSpawned(xPos, yPos + 2) && GetIslandTerrainType(xPos, yPos + 2).ToString().Contains("B"))
 				{
 					//If it does add a top entrance to the island.
 					entrancesNeeded.Add('T');
@@ -355,106 +420,107 @@ public class TerrainGenerator : MonoBehaviour
 				SpawnIsland(xPos, yPos + 1, fillAmount, smoothPasses, terrainTile, RandomTerrainType(entrancesNeeded));
 			}
 
-		//If the island has a bottom entrance and there is no island spawned below.
-		if (terrainType.ToString().Contains("B") && !IsIslandSpawned(xPos, yPos - 1))
-		{
-			//Create a list of chars that indicate the entrances needed for the new island.
-			List<char> entrancesNeeded = new List<char>();
-
-			//Add a top entrance to the new island as the one above it has a bottom entrance.
-			entrancesNeeded.Add('T');
-
-			//Check if there is an Island two terrain tiles below and see if it has a top entrance.
-			if (IsIslandSpawned(xPos, yPos + 2) && GetIslandTerrainType(xPos, yPos + 2).ToString().Contains("T"))
+			//If the island has a bottom entrance and there is no island spawned below.
+			if (terrainType.ToString().Contains("B") && !IsIslandSpawned(xPos, yPos - 1))
 			{
-				//If it does add a bottom entrance to the island.
-				entrancesNeeded.Add('B');
-			}
+				//Create a list of chars that indicate the entrances needed for the new island.
+				List<char> entrancesNeeded = new List<char>();
 
-			//Check if there is an island to the right of the island were about to spawn and if it has a left entrance.
-			if (IsIslandSpawned(xPos + 1, yPos - 1) && GetIslandTerrainType(xPos + 1, yPos - 1).ToString().Contains("L"))
-			{
-				//If it does then add a right entrance to the new island.
-				entrancesNeeded.Add('R');
-			}
-
-			//Check if there is an island to the left of the island were about to spawn and if it has a right entrance.
-			if (IsIslandSpawned(xPos - 1, yPos - 1) && GetIslandTerrainType(xPos - 1, yPos - 1).ToString().Contains("R"))
-			{
-				//If it does then add a left entrance to the new island.
-				entrancesNeeded.Add('L');
-			}
-
-			//Spawn in the new island with all the entrances required.
-			SpawnIsland(xPos, yPos - 1, fillAmount, smoothPasses, terrainTile, RandomTerrainType(entrancesNeeded));
-		}
-
-		//If the island has a Right entrance and there is no island spawned to the right.
-		if (terrainType.ToString().Contains("R") && !IsIslandSpawned(xPos + 1, yPos))
-		{
-			//Create a list of chars that indicate the entrances needed for the new island.
-			List<char> entrancesNeeded = new List<char>();
-
-			//Add a left entrance to the new island as the one to the left it has a right entrance.
-			entrancesNeeded.Add('L');
-
-			//Check if there is an Island two terrain tiles right and see if it has a left entrance.
-			if (IsIslandSpawned(xPos + 2, yPos) && GetIslandTerrainType(xPos + 2, yPos).ToString().Contains("L"))
-			{
-				//If it does add a right entrance to the island.
-				entrancesNeeded.Add('R');
-			}
-
-			//Check if there is an island above the island were about to spawn and if it has a bottom entrance.
-			if (IsIslandSpawned(xPos + 1, yPos + 1) && GetIslandTerrainType(xPos + 1, yPos + 1).ToString().Contains("B"))
-			{
-				//If it does then add a top entrance to the new island.
+				//Add a top entrance to the new island as the one above it has a bottom entrance.
 				entrancesNeeded.Add('T');
+
+				//Check if there is an Island two terrain tiles below and see if it has a top entrance.
+				if (IsIslandSpawned(xPos, yPos + 2) && GetIslandTerrainType(xPos, yPos + 2).ToString().Contains("T"))
+				{
+					//If it does add a bottom entrance to the island.
+					entrancesNeeded.Add('B');
+				}
+
+				//Check if there is an island to the right of the island were about to spawn and if it has a left entrance.
+				if (IsIslandSpawned(xPos + 1, yPos - 1) && GetIslandTerrainType(xPos + 1, yPos - 1).ToString().Contains("L"))
+				{
+					//If it does then add a right entrance to the new island.
+					entrancesNeeded.Add('R');
+				}
+
+				//Check if there is an island to the left of the island were about to spawn and if it has a right entrance.
+				if (IsIslandSpawned(xPos - 1, yPos - 1) && GetIslandTerrainType(xPos - 1, yPos - 1).ToString().Contains("R"))
+				{
+					//If it does then add a left entrance to the new island.
+					entrancesNeeded.Add('L');
+				}
+
+				//Spawn in the new island with all the entrances required.
+				SpawnIsland(xPos, yPos - 1, fillAmount, smoothPasses, terrainTile, RandomTerrainType(entrancesNeeded));
 			}
 
-			//Check if there is an island below the island were about to spawn and if it has a top entrance.
-			if (IsIslandSpawned(xPos + 1, yPos - 1) && GetIslandTerrainType(xPos + 1, yPos - 1).ToString().Contains("T"))
+			//If the island has a Right entrance and there is no island spawned to the right.
+			if (terrainType.ToString().Contains("R") && !IsIslandSpawned(xPos + 1, yPos))
 			{
-				//If it does then add a bottom entrance to the new island.
-				entrancesNeeded.Add('B');
-			}
+				//Create a list of chars that indicate the entrances needed for the new island.
+				List<char> entrancesNeeded = new List<char>();
 
-			//Spawn in the new island with all the entrances required.
-			SpawnIsland(xPos + 1, yPos, fillAmount, smoothPasses, terrainTile, RandomTerrainType(entrancesNeeded));
-		}
-
-		//If the island has a left entrance and there is no island spawned to the left.
-		if (terrainType.ToString().Contains("L") && !IsIslandSpawned(xPos - 1, yPos))
-		{
-			//Create a list of chars that indicate the entrances needed for the new island.
-			List<char> entrancesNeeded = new List<char>();
-
-			//Add a Right entrance to the new island as the one to the right it has a left entrance.
-			entrancesNeeded.Add('R');
-
-			//Check if there is an Island two terrain tiles left and see if it has a right entrance.
-			if (IsIslandSpawned(xPos - 2, yPos) && GetIslandTerrainType(xPos - 2, yPos).ToString().Contains("R"))
-			{
-				//If it does add a left entrance to the island.
+				//Add a left entrance to the new island as the one to the left it has a right entrance.
 				entrancesNeeded.Add('L');
+
+				//Check if there is an Island two terrain tiles right and see if it has a left entrance.
+				if (IsIslandSpawned(xPos + 2, yPos) && GetIslandTerrainType(xPos + 2, yPos).ToString().Contains("L"))
+				{
+					//If it does add a right entrance to the island.
+					entrancesNeeded.Add('R');
+				}
+
+				//Check if there is an island above the island were about to spawn and if it has a bottom entrance.
+				if (IsIslandSpawned(xPos + 1, yPos + 1) && GetIslandTerrainType(xPos + 1, yPos + 1).ToString().Contains("B"))
+				{
+					//If it does then add a top entrance to the new island.
+					entrancesNeeded.Add('T');
+				}
+
+				//Check if there is an island below the island were about to spawn and if it has a top entrance.
+				if (IsIslandSpawned(xPos + 1, yPos - 1) && GetIslandTerrainType(xPos + 1, yPos - 1).ToString().Contains("T"))
+				{
+					//If it does then add a bottom entrance to the new island.
+					entrancesNeeded.Add('B');
+				}
+
+				//Spawn in the new island with all the entrances required.
+				SpawnIsland(xPos + 1, yPos, fillAmount, smoothPasses, terrainTile, RandomTerrainType(entrancesNeeded));
 			}
 
-			//Check if there is an island above the island were about to spawn and if it has a bottom entrance.
-			if (IsIslandSpawned(xPos - 1, yPos + 1) && GetIslandTerrainType(xPos - 1, yPos + 1).ToString().Contains("B"))
+			//If the island has a left entrance and there is no island spawned to the left.
+			if (terrainType.ToString().Contains("L") && !IsIslandSpawned(xPos - 1, yPos))
 			{
-				//If it does then add a top entrance to the new island.
-				entrancesNeeded.Add('T');
-			}
+				//Create a list of chars that indicate the entrances needed for the new island.
+				List<char> entrancesNeeded = new List<char>();
 
-			//Check if there is an island below the island were about to spawn and if it has a top entrance.
-			if (IsIslandSpawned(xPos - 1, yPos - 1) && GetIslandTerrainType(xPos - 1, yPos - 1).ToString().Contains("T"))
-			{
-				//If it does then add a bottom entrance to the new island.
-				entrancesNeeded.Add('B');
-			}
+				//Add a Right entrance to the new island as the one to the right it has a left entrance.
+				entrancesNeeded.Add('R');
 
-			//Spawn in the new island with all the entrances required.
-			SpawnIsland(xPos - 1, yPos, fillAmount, smoothPasses, terrainTile, RandomTerrainType(entrancesNeeded));
+				//Check if there is an Island two terrain tiles left and see if it has a right entrance.
+				if (IsIslandSpawned(xPos - 2, yPos) && GetIslandTerrainType(xPos - 2, yPos).ToString().Contains("R"))
+				{
+					//If it does add a left entrance to the island.
+					entrancesNeeded.Add('L');
+				}
+
+				//Check if there is an island above the island were about to spawn and if it has a bottom entrance.
+				if (IsIslandSpawned(xPos - 1, yPos + 1) && GetIslandTerrainType(xPos - 1, yPos + 1).ToString().Contains("B"))
+				{
+					//If it does then add a top entrance to the new island.
+					entrancesNeeded.Add('T');
+				}
+
+				//Check if there is an island below the island were about to spawn and if it has a top entrance.
+				if (IsIslandSpawned(xPos - 1, yPos - 1) && GetIslandTerrainType(xPos - 1, yPos - 1).ToString().Contains("T"))
+				{
+					//If it does then add a bottom entrance to the new island.
+					entrancesNeeded.Add('B');
+				}
+
+				//Spawn in the new island with all the entrances required.
+				SpawnIsland(xPos - 1, yPos, fillAmount, smoothPasses, terrainTile, RandomTerrainType(entrancesNeeded));
+			}
 		}
 	}
 

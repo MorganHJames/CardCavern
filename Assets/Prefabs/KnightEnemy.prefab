@@ -438,6 +438,7 @@ MonoBehaviour:
     type: 3}
   enemyPushTileIndicatorPrefab: {fileID: 2507389607313000930, guid: aa44ccaa657fd7f4f92da67aaf5a8e0b,
     type: 3}
+  cardHandler: {fileID: 0}
 --- !u!1 &2851466385713039551
 GameObject:
   m_ObjectHideFlags: 0

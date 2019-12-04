@@ -18,4 +18,4 @@ MonoBehaviour:
   - amount: 3
     actionType: 5
   - amount: 3
-    actionType: 3
+    actionType: 0

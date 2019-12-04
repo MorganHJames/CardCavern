@@ -35,6 +35,11 @@ public class CardMover : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, 
 	/// If all the cards are being discarded or not.
 	/// </summary>
 	public static bool discarding = false;
+
+	/// <summary>
+	/// If a card is being moved.
+	/// </summary>
+	public static bool moving = false;
 	#endregion
 	#region Public
 	/// <summary>
@@ -86,6 +91,11 @@ public class CardMover : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, 
 			cardOutlineImage.transform.position = Vector3.Lerp(cardOutlineImage.transform.position, cardOulineActivatedTransform.position, 5f * Time.deltaTime);
 			transform.position = Vector3.Lerp(transform.position, cardOulineActivatedTransform.position, 5f * Time.deltaTime);
 		}
+
+		if (actionHandler.terrainGenerator.playerController && actionHandler.terrainGenerator.playerController.IsDead())
+		{
+			moving = true;
+		}
 	}
 	#endregion
 	#region Public
@@ -111,6 +121,7 @@ public class CardMover : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, 
 	{
 		if (canMove || (discarding && !cardActivated))
 		{
+			moving = true;
 			transform.rotation = Quaternion.Euler(Vector3.zero);
 			transform.localScale = new Vector3(1.25f, 1.25f);
 		}
@@ -146,6 +157,10 @@ public class CardMover : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, 
 				transform.localScale = new Vector3(1f, 1f);
 				StartCoroutine(cardHandler.UpdateRotationAndPosition());
 				cardOutlineImage.color = new Color(1f, 1f, 1f, 0f);
+			}
+			if (!actionHandler.terrainGenerator.playerController.IsDead())
+			{
+				moving = false;
 			}
 		}
 	}

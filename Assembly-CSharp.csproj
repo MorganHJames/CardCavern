@@ -88,21 +88,29 @@
     <Compile Include="Assets\AStar-master\Roy-T.AStar\Position.cs" />
     <Compile Include="Assets\Scripts\ActionCreator.cs" />
     <Compile Include="Assets\Scripts\ActionHandler.cs" />
+    <Compile Include="Assets\Scripts\ButtonWithPositionChange.cs" />
+    <Compile Include="Assets\Scripts\CameraController.cs" />
     <Compile Include="Assets\Scripts\CardCreator.cs" />
     <Compile Include="Assets\Scripts\CardHandler.cs" />
     <Compile Include="Assets\Scripts\CardMover.cs" />
+    <Compile Include="Assets\Scripts\ChangeMixerLevels.cs" />
     <Compile Include="Assets\Scripts\Enemy.cs" />
     <Compile Include="Assets\Scripts\EnemyHandler.cs" />
     <Compile Include="Assets\Scripts\EnemyTileIndicator.cs" />
     <Compile Include="Assets\Scripts\Entity.cs" />
     <Compile Include="Assets\Scripts\FilledGrid.cs" />
+    <Compile Include="Assets\Scripts\GameOverHandler.cs" />
+    <Compile Include="Assets\Scripts\MoveInCircle.cs" />
+    <Compile Include="Assets\Scripts\OpenURL.cs" />
     <Compile Include="Assets\Scripts\PlayerController.cs" />
+    <Compile Include="Assets\Scripts\PlayerData.cs" />
     <Compile Include="Assets\Scripts\PoissonDiscSampler.cs" />
+    <Compile Include="Assets\Scripts\ScoreHandler.cs" />
     <Compile Include="Assets\Scripts\ScriptableObjects\Card.cs" />
     <Compile Include="Assets\Scripts\TerrainGenerator.cs" />
     <Compile Include="Assets\Scripts\TerrainTile.cs" />
     <Compile Include="Assets\Scripts\TileIndicator.cs" />
-    <Compile Include="Assets\Scripts\yeet.cs" />
+    <Compile Include="Assets\Scripts\UIController.cs" />
     <None Include="Assets\2d-extras-master\Assets\Tilemap\Tiles\Rule Tile\ScriptTemplates\NewCustomRuleTile.cs.txt" />
     <None Include="Assets\TextMesh Pro\Resources\Shaders\TMP_SDF-Surface-Mobile.shader" />
     <None Include="Assets\TextMesh Pro\Resources\LineBreaking Leading Characters.txt" />
@@ -690,6 +698,12 @@
     <Reference Include="System.Xml.Serialization">
       <HintPath>C:/Program Files/Unity/Hub/Editor/2018.3.6f1/Editor/Data/NetStandard/compat/2.0.0/shims/netfx/System.Xml.Serialization.dll</HintPath>
     </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="Assembly-CSharp-firstpass.csproj">
+      <Project>{D0844D9A-8D55-3D7B-038A-0875065E530B}</Project>
+      <Name>Assembly-CSharp-firstpass</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="GenerateTargetFrameworkMonikerAttribute" />

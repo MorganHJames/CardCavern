@@ -133,7 +133,7 @@ public class Enemy : Entity
 				{
 					if (playerController.position == TerrainGenerator.WorldToGrid(tileIndicator.transform.position))
 					{
-						playerController.ChangeHealth(-playerController.maxHealth);
+						playerController.ChangeHealth(-PlayerController.maxHealth);
 						playerController.MoveToTile(new Position(playerController.position.X, playerController.position.Y - 1));
 					}
 				});
@@ -190,7 +190,7 @@ public class Enemy : Entity
 				{
 					if (playerController.position == TerrainGenerator.WorldToGrid(tileIndicator.transform.position))
 					{
-						playerController.ChangeHealth(-playerController.maxHealth);
+						playerController.ChangeHealth(-PlayerController.maxHealth);
 						playerController.MoveToTile(new Position(playerController.position.X, playerController.position.Y + 1));
 					}
 				});
@@ -247,7 +247,7 @@ public class Enemy : Entity
 				{
 					if (playerController.position == TerrainGenerator.WorldToGrid(tileIndicator.transform.position))
 					{
-						playerController.ChangeHealth(-playerController.maxHealth);
+						playerController.ChangeHealth(-PlayerController.maxHealth);
 						playerController.MoveToTile(new Position(playerController.position.X + 1, playerController.position.Y));
 					}
 				});
@@ -304,7 +304,7 @@ public class Enemy : Entity
 				{
 					if (playerController.position == TerrainGenerator.WorldToGrid(tileIndicator.transform.position))
 					{
-						playerController.ChangeHealth(-playerController.maxHealth);
+						playerController.ChangeHealth(-PlayerController.maxHealth);
 						playerController.MoveToTile(new Position(playerController.position.X - 1, playerController.position.Y));
 					}
 				});
@@ -363,9 +363,16 @@ public class Enemy : Entity
 		if (health <= 0)
 		{
 			cardHandler.DrawCard();
+			PlayerData.Instance.IncreaseScore(1);
 			//Die.
 			EnemyHandler.enemies.Remove(this);
 			TerrainGenerator.grid.UnblockCell(position);
+
+			if (EnemyHandler.enemies.Count == 0)
+			{
+				PlayerData.NextFloor();
+			}
+
 			Destroy(this.gameObject);
 		}
 		if (health > maxHealth)

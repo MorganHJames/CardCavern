@@ -38,11 +38,11 @@ SpriteAtlas:
       blockOffset: 1
       allowAlphaSplitting: 0
       enableRotation: 0
-      enableTightPacking: 1
+      enableTightPacking: 0
     variantMultiplier: 1
     packables:
     - {fileID: 2800000, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
-    totalSpriteSurfaceArea: 105472
+    totalSpriteSurfaceArea: 115712
     bindAsDefault: 1
   m_MasterAtlas: {fileID: 0}
   m_PackedSprites:
@@ -106,11 +106,21 @@ SpriteAtlas:
   - {fileID: 21300534, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
   - {fileID: 21300540, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
   - {fileID: 21300538, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
+  - {fileID: 21300670, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
+  - {fileID: 21300672, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
   - {fileID: 21300658, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
+  - {fileID: 21300660, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
   - {fileID: 21300654, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
   - {fileID: 21300656, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
+  - {fileID: 21300666, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
   - {fileID: 21300472, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
+  - {fileID: 21300668, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
   - {fileID: 21300470, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
+  - {fileID: 21300662, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
+  - {fileID: 21300664, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
+  - {fileID: 21300676, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
+  - {fileID: 21300674, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
+  - {fileID: 21300678, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
   - {fileID: 21300460, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
   - {fileID: 21300458, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
   - {fileID: 21300456, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
@@ -210,11 +220,21 @@ SpriteAtlas:
   - CardCavernSpriteSheet_40
   - CardCavernSpriteSheet_43
   - CardCavernSpriteSheet_42
+  - CardCavernSpriteSheet_108
+  - CardCavernSpriteSheet_109
   - CardCavernSpriteSheet_102
+  - CardCavernSpriteSheet_103
   - CardCavernSpriteSheet_100
   - CardCavernSpriteSheet_101
+  - CardCavernSpriteSheet_106
   - CardCavernSpriteSheet_9
+  - CardCavernSpriteSheet_107
   - CardCavernSpriteSheet_8
+  - CardCavernSpriteSheet_104
+  - CardCavernSpriteSheet_105
+  - CardCavernSpriteSheet_111
+  - CardCavernSpriteSheet_110
+  - CardCavernSpriteSheet_112
   - CardCavernSpriteSheet_3
   - CardCavernSpriteSheet_2
   - CardCavernSpriteSheet_1

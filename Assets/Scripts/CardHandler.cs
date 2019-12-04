@@ -155,13 +155,26 @@ public class CardHandler : MonoBehaviour
 	private void Start()
 	{
 		gridLayoutGroup = GetComponent<GridLayoutGroup>();
-		AddCard(startingAttack);
-		AddCard(startingMovement);
 
-		for (int i = 0; i < startCardCount; i++)
+		if (PlayerData.cards.Length == 0)
 		{
-			AddCard(PickACard());
+			AddCard(startingAttack);
+			AddCard(startingMovement);
+
+			for (int i = 0; i < startCardCount; i++)
+			{
+				AddCard(PickACard());
+			}
 		}
+		else
+		{
+			foreach (Card card in PlayerData.cards)
+			{
+				AddCard(card);
+			}
+		}
+
+		PlayerData.cardHandler = this;
 	}
 
 	/// <summary>
@@ -212,12 +225,18 @@ public class CardHandler : MonoBehaviour
 		//Turn off all tile indicators.
 		foreach (EnemyTileIndicator enemyTileIndicator in ActionHandler.damageIndicators)
 		{
-			enemyTileIndicator.enabled = true;
+			if (enemyTileIndicator != null)
+			{
+				enemyTileIndicator.enabled = true;
+			}
 		}
 
 		foreach (GameObject tileIndicator in ActionHandler.tileIndicators)
 		{
-			tileIndicator.GetComponent<TileIndicator>().enabled = true;
+			if (tileIndicator != null)
+			{
+				tileIndicator.GetComponent<TileIndicator>().enabled = true;
+			}
 		}
 		CardMover.discarding = false;
 	}
@@ -332,12 +351,18 @@ public class CardHandler : MonoBehaviour
 			//Turn off all tile indicators.
 			foreach (EnemyTileIndicator enemyTileIndicator in ActionHandler.damageIndicators)
 			{
-				enemyTileIndicator.enabled = false;
+				if (enemyTileIndicator != null)
+				{
+					enemyTileIndicator.enabled = false;
+				}
 			}
 
 			foreach (GameObject tileIndicator in ActionHandler.tileIndicators)
 			{
-				tileIndicator.GetComponent<TileIndicator>().enabled = false;
+				if (tileIndicator != null)
+				{
+					tileIndicator.GetComponent<TileIndicator>().enabled = false;
+				}
 			}
 
 			CardMover.discarding = true;
@@ -360,7 +385,7 @@ public class CardHandler : MonoBehaviour
 		//Destroy card.
 		Destroy(cardGameObject);
 
-		if (!(transform.childCount > maxHandSize))
+		if (!(transform.childCount > maxHandSize + 1))
 		{
 			StopDiscarding();
 		}
@@ -368,7 +393,7 @@ public class CardHandler : MonoBehaviour
 		//If no cards == die;
 		if (transform.childCount == 0)
 		{
-			terrainGenerator.playerController.ChangeHealth(-terrainGenerator.playerController.maxHealth);
+			terrainGenerator.playerController.ChangeHealth(-PlayerController.maxHealth);
 		}
 		else
 		{

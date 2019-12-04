@@ -31,12 +31,17 @@ public class PlayerController : Entity
 	/// <summary>
 	/// The players max health.
 	/// </summary>
-	[HideInInspector] public int maxHealth = 5;
+	[HideInInspector] public static int maxHealth = 5;
 
 	/// <summary>
 	/// Heart container transform.
 	/// </summary>
 	[HideInInspector] public Transform hearthContainerTransform;
+
+	/// <summary>
+	/// The game over handler.
+	/// </summary>
+	[HideInInspector] public GameOverHandler gameOverHandler;
 	#endregion
 	#endregion
 
@@ -47,8 +52,15 @@ public class PlayerController : Entity
 	/// </summary>
 	private void Start()
 	{
-		health = maxHealth;
-		UpdateHealth();
+		if (PlayerData.playerHealth != maxHealth)
+		{
+			health = PlayerData.playerHealth;
+			UpdateHealth();
+		}
+		else
+		{
+			health = maxHealth;
+		}
 	}
 
 	/// <summary>
@@ -114,37 +126,6 @@ public class PlayerController : Entity
 	}
 
 	/// <summary>
-	/// Gets the input for the player and applies the correct direction to the player.
-	/// </summary>
-	private void Update()
-	{
-		if (Input.GetKeyDown(KeyCode.W) && TerrainGenerator.grid.GetCellCost(new Position(position.X, position.Y + 1)) == 1)
-		{
-			MoveToTile(new Position(position.X, position.Y + 1));
-			Debug.Log(position.X + " " + position.Y);
-			Debug.Log(TerrainGenerator.WorldToGrid(transform.position).X + " " + TerrainGenerator.WorldToGrid(transform.position).Y);
-		}
-		if (Input.GetKeyDown(KeyCode.S) && TerrainGenerator.grid.GetCellCost(new Position(position.X, position.Y - 1)) == 1)
-		{
-			MoveToTile(new Position(position.X, position.Y -1));
-			Debug.Log(position.X + " " + position.Y);
-			Debug.Log(TerrainGenerator.WorldToGrid(transform.position).X + " " + TerrainGenerator.WorldToGrid(transform.position).Y);
-		}
-		if (Input.GetKeyDown(KeyCode.A) && TerrainGenerator.grid.GetCellCost(new Position(position.X - 1, position.Y)) == 1)
-		{
-			MoveToTile(new Position(position.X - 1, position.Y));
-			Debug.Log(position.X + " " + position.Y);
-			Debug.Log(TerrainGenerator.WorldToGrid(transform.position).X + " " + TerrainGenerator.WorldToGrid(transform.position).Y);
-		}
-		if (Input.GetKeyDown(KeyCode.D) && TerrainGenerator.grid.GetCellCost(new Position(position.X + 1, position.Y)) == 1)
-		{
-			MoveToTile(new Position(position.X + 1, position.Y));
-			Debug.Log(position.X + " " + position.Y);
-			Debug.Log(TerrainGenerator.WorldToGrid(transform.position).X + " " + TerrainGenerator.WorldToGrid(transform.position).Y);
-		}
-	}
-
-	/// <summary>
 	/// Flips the character to face the other direction.
 	/// </summary>
 	/// <param name="direction">The direction to flip the player. Higher than 0 means right and lower than 0 is left. </param>
@@ -164,22 +145,23 @@ public class PlayerController : Entity
 	public void ChangeHealth(int healthChange)
 	{
 		health += healthChange;
-		if (health <= 0)
+		if (IsDead())
 		{
 			//Die
-			Debug.Log("Player died");
 			foreach (Enemy enemy in EnemyHandler.enemies)
 			{
 				enemy.ResolveAttack(true);
 			}
 
-			CardMover.canMove = false;
+			gameOverHandler.ActiveGameOverScreen();
 		}
+
 		if (health > maxHealth)
 		{
 			health = maxHealth;
 		}
 
+		PlayerData.playerHealth = health;
 		UpdateHealth();
 	}
 
