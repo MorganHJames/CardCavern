@@ -5,8 +5,8 @@
 // Brief: Handles things that are passed through scenes like score, health and cards.
 //////////////////////////////////////////////////////////// 
 
-using System.Collections;
 using System.Collections.Generic;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
@@ -53,6 +53,11 @@ public class PlayerData : MonoBehaviour
 	/// The current score.
 	/// </summary>
 	[HideInInspector] public static int score;
+
+	/// <summary>
+	/// The current floor.
+	/// </summary>
+	[HideInInspector] public static int floor = 1;
 
 	/// <summary>
 	/// The game over handler.
@@ -133,6 +138,8 @@ public class PlayerData : MonoBehaviour
 	/// <param name="increaseScore">Whether or not to increase the players score.</param>
 	public static void NextFloor(bool increaseScore = true)
 	{
+		CardMover.canMove = false;
+		CardMover.moving = true;
 		if (increaseScore)
 		{
 			score += 25;
@@ -150,7 +157,18 @@ public class PlayerData : MonoBehaviour
 			cards = cardsList.ToArray();
 		}
 
-		SceneManager.LoadScene("BaseScene", LoadSceneMode.Single);
+		//play animation
+		if (increaseScore)
+		{
+			LevelCompleteController.CallGoToNextLevel();
+			floor++;
+		}
+		else
+		{
+			CardMover.canMove = true;
+			CardMover.moving = false;
+			SceneManager.LoadScene("BaseScene", LoadSceneMode.Single);
+		}
 	}
 
 	/// <summary>

@@ -52,6 +52,7 @@ public class ActionCreator : MonoBehaviour
 	{
 		icon.sprite = actionIcons[(int)action.actionType];
 		amount.text = action.amount.ToString();
+		transform.localScale = Vector3.one;
 	}
 	#endregion
 	#endregion

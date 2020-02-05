@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -107981364, guid: 2c3078f85c1a94a82b179c36ee13484f, type: 3}
+  m_Name: UDP Settings
+  m_EditorClassIdentifier: 
+  UnityProjectID: 8e5dc4f2-0417-46aa-ba42-a426e885a6ca
+  UnityClientID: 0DOyseZSHPTXZVJLS7PwBQ
+  UnityClientKey: ko6EyYoksT4wwWObcNU8VEOQS2DfMTCHkwaH7PR90A8
+  UnityClientRSAPublicKey: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsIoFpzoHQYEZtgdkuJPi+bTIVj/eAwJ83AeiXVCPlIDws29RKzjw3q8feuqbbkurD0gjJ2OAfIyk+V10f6m3q3yMZGCLBwedQk+NZ7wFfSCb+vEjvB7gdKrE0a0LAGbuTdFVmDGq89w9b9FjLhQNxq53PpHWzjRjqAQo+k5hQh5OSJmXwZzp5FsF7A67w9OXI9bv+yJG3fpiIAPeRlaQ3sNsYTNlZLHT0dq5ngr95GoSgT9afwytoD4W92Lgtc5P4QETT1iHKqQZm1RJ9WPDVNKwNti9tRzD1jO7Ue3sGdEoM9pb1XXQPLFpMGXVcaeIVf3MScNdFpwFv5jw9BoLXQIDAQAB
+  AppName: Card Cavern
+  AppSlug: f1900db7-8755-4538-bca5-aa17eafccddc
+  AppItemId: 274880554156
+  Permission: 

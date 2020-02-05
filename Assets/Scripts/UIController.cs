@@ -53,6 +53,12 @@ public class UIController : MonoBehaviour
 	[SerializeField] private ButtonWithPositionChange settingsButton;
 
 	/// <summary>
+	/// The remove Ads button.
+	/// </summary>
+	[Tooltip("The remove Ads button.")]
+	[SerializeField] private ButtonWithPositionChange removeAdsButton;
+
+	/// <summary>
 	/// The return to menu button.
 	/// </summary>
 	[Tooltip("The return to menu button.")]
@@ -92,6 +98,11 @@ public class UIController : MonoBehaviour
 		returnToMenuButton.onClick.AddListener(ReturnToMenu);
 		highscoreText.text = "Highscore: " + PlayerPrefs.GetInt("HighScore");
 		highscoreTextShadow.text = "Highscore: " + PlayerPrefs.GetInt("HighScore");
+
+		if (PlayerPrefs.GetInt("NoAds") == 1)
+		{
+			removeAdsButton.transform.parent.gameObject.SetActive(false);
+		}
 	}
 
 	/// <summary>
@@ -128,7 +139,8 @@ public class UIController : MonoBehaviour
 	{
 		NativeShare nativeShare = new NativeShare();
 		nativeShare.SetSubject("Can you beat my high score of " + PlayerPrefs.GetInt("HighScore") + " in CardCavern?");
-		nativeShare.SetText("I bet you can't beat my score of " + PlayerPrefs.GetInt("HighScore") + " in CardCavern. If you think you can, download the game at www.website.com");
+		nativeShare.SetText("I bet you can't beat my score of " + PlayerPrefs.GetInt("HighScore") + " in CardCavern. If you think you can, download the game at: https://play.google.com/store/apps/details?id=com.MorganHJames.CardCavern !");
+		nativeShare.Share();
 	}
 
 	/// <summary>

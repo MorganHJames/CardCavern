@@ -86,6 +86,12 @@ public class TerrainGenerator : MonoBehaviour
 	[SerializeField] private Tilemap collisionTileMap;
 
 	/// <summary>
+	/// The loading screen.
+	/// </summary>
+	[Tooltip("The loading screen.")]
+	[SerializeField] private GameObject loadingScreen;
+
+	/// <summary>
 	/// The card handler.
 	/// </summary>
 	[Tooltip("The card handler.")]
@@ -161,6 +167,7 @@ public class TerrainGenerator : MonoBehaviour
 		SetupFullGrid();
 		SpawnPlayer(player);
 		SpawnEnemies();
+		loadingScreen.SetActive(false);
 	}
 
 	/// <summary>
@@ -173,6 +180,7 @@ public class TerrainGenerator : MonoBehaviour
 		MoveCameraToPlayerStartPoint();
 		SpawnPlayer(playerNoCamera);
 		SpawnEnemies();
+		loadingScreen.SetActive(false);
 	}
 
 	/// <summary>

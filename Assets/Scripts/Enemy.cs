@@ -6,6 +6,7 @@
 //////////////////////////////////////////////////////////// 
 
 using RoyT.AStar;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -16,6 +17,17 @@ public class Enemy : Entity
 {
 	#region Variables
 	#region Private
+	/// <summary>
+	/// The Animator the controls the enemy's animation.
+	/// </summary>
+	[Tooltip("The animator the controls the enemy's animation.")]
+	[SerializeField] private Animator animator;
+
+	/// <summary>
+	/// True when the enemy is getting pushed.
+	/// </summary>
+	private bool gettingPushed = false;
+
 	/// <summary>
 	/// The enemy max health.
 	/// </summary>
@@ -36,6 +48,18 @@ public class Enemy : Entity
 	/// </summary>
 	[Tooltip("The health container for the enemy.")]
 	[SerializeField] private Transform healthContainer;
+
+	/// <summary>
+	/// The lava effect.
+	/// </summary>
+	[Tooltip("The lava effect.")]
+	[SerializeField] private GameObject lavaEffect;
+
+	/// <summary>
+	/// The melee attack effect.
+	/// </summary>
+	[Tooltip("The melee attack effect.")]
+	[SerializeField] private GameObject meleeAttackEffect;
 
 	/// <summary>
 	/// The enemy melee tile indicator prefab.
@@ -81,6 +105,72 @@ public class Enemy : Entity
 		float scaleForHeart = (float)health / (float)maxHealth;
 		healthContainer.localScale = new Vector3(scaleForHeart, scaleForHeart, 1f);
 	}
+
+	/// <summary>
+	/// Walks the enemy to a position.
+	/// </summary>
+	/// <param name="postionToMoveTo">The position to move the enemy to.</param>
+	private IEnumerator WalkToTile(Position postionToMoveTo)
+	{
+		//If the grid is cell blocked unblock.
+		if (TerrainGenerator.grid.GetCellCost(position) > 1)
+		{
+			TerrainGenerator.grid.UnblockCell(position);
+		}
+
+		//Block the new tile
+		TerrainGenerator.grid.BlockCell(postionToMoveTo);
+
+		if (!gettingPushed)
+		{
+			animator.SetFloat("Speed", 1f);
+		}
+		AudioManager.instance.PlayOneShot((int)AudioManager.SFXClips.EnemyMove);
+		position = postionToMoveTo;
+		yield return new WaitForSeconds(0.5f);
+		if (!gettingPushed)
+		{
+			animator.SetFloat("Speed", 0f);
+		}
+	}
+
+	/// <summary>
+	/// Moves the player to where he's gotta be.
+	/// </summary>
+	private void Update()
+	{
+		transform.position = Vector3.Lerp(transform.position, TerrainGenerator.GridToWorld(position), Time.deltaTime * 10f);
+	}
+
+	/// <summary>
+	/// Makes the enemy die in lava after some time.
+	/// </summary>
+	/// <param name="dieAtTheEnd">If the enemy should die from being pushed or not.</param>
+	/// <returns></returns>
+	private IEnumerator PushAnim(bool dieAtTheEnd = false)
+	{
+		animator.Play("Pushed");
+		if (dieAtTheEnd)
+		{
+			//Die.
+			EnemyHandler.enemies.Remove(this);
+		}
+		gettingPushed = true;
+		yield return new WaitForSeconds(0.2f);
+
+		if (dieAtTheEnd)
+		{
+			lavaEffect.SetActive(true);
+		}
+
+		yield return new WaitForSeconds(0.3f);
+
+		if (dieAtTheEnd)
+		{
+			ChangeHealth(-maxHealth, true);
+		}
+		gettingPushed = false;
+	}
 	#endregion
 	#region Public
 	/// <summary>
@@ -93,13 +183,12 @@ public class Enemy : Entity
 
 		TerrainGenerator.grid.UnblockCell(a_playerController.position);
 		Position[] path = TerrainGenerator.grid.GetPath(position, a_playerController.position);
+		TerrainGenerator.grid.BlockCell(a_playerController.position);
 
 		if (path.Length < visionRange && path.Length > 2)
 		{
-			MoveToTile(path[1]);
+			StartCoroutine(WalkToTile(path[1]));
 		}
-
-		TerrainGenerator.grid.BlockCell(a_playerController.position);
 
 		//If enemy is above player.
 		if (position == new Position(a_playerController.position.X, a_playerController.position.Y + 1))
@@ -123,7 +212,7 @@ public class Enemy : Entity
 			{
 				//Spawn tile on player.
 				GameObject tileIndicator = Instantiate(enemyPushTileIndicatorPrefab);
-				tileIndicator.transform.parent = this.transform;
+				tileIndicator.transform.parent = transform.parent.transform;
 				tileIndicator.transform.position = TerrainGenerator.GridToWorld(a_playerController.position);
 				EnemyTileIndicator enemyTileIndicator = tileIndicator.GetComponent<EnemyTileIndicator>();
 				//Add tile to list.		
@@ -133,8 +222,9 @@ public class Enemy : Entity
 				{
 					if (playerController.position == TerrainGenerator.WorldToGrid(tileIndicator.transform.position))
 					{
-						playerController.ChangeHealth(-PlayerController.maxHealth);
-						playerController.MoveToTile(new Position(playerController.position.X, playerController.position.Y - 1));
+						animator.Play("PushDown");
+						AudioManager.instance.PlayOneShot((int)AudioManager.SFXClips.EnemyPush);
+						StartCoroutine(playerController.PushedIntoLava(new Position(playerController.position.X, playerController.position.Y - 1)));
 					}
 				});
 			}
@@ -142,7 +232,7 @@ public class Enemy : Entity
 			{
 				//Spawn tile on player.
 				GameObject tileIndicator = Instantiate(enemyMeleeTileIndicatorPrefab);
-				tileIndicator.transform.parent = this.transform;
+				tileIndicator.transform.parent = transform.parent.transform;
 				tileIndicator.transform.position = TerrainGenerator.GridToWorld(a_playerController.position);
 				EnemyTileIndicator enemyTileIndicator = tileIndicator.GetComponent<EnemyTileIndicator>();
 				//Add tile to list.		
@@ -153,6 +243,11 @@ public class Enemy : Entity
 					if (playerController.position == TerrainGenerator.WorldToGrid(tileIndicator.transform.position))
 					{
 						playerController.ChangeHealth(-1);
+						animator.Play("Melee");
+						AudioManager.instance.PlayOneShot((int)AudioManager.SFXClips.EnemyMelee);
+						GameObject meleeEffect = Instantiate(meleeAttackEffect);
+						meleeEffect.transform.position = TerrainGenerator.GridToWorld(playerController.position);
+						Destroy(meleeEffect, 1f);
 					}
 				});
 			}
@@ -180,7 +275,7 @@ public class Enemy : Entity
 			{
 				//Spawn tile on player.
 				GameObject tileIndicator = Instantiate(enemyPushTileIndicatorPrefab);
-				tileIndicator.transform.parent = this.transform;
+				tileIndicator.transform.parent = transform.parent.transform;
 				tileIndicator.transform.position = TerrainGenerator.GridToWorld(a_playerController.position);
 				EnemyTileIndicator enemyTileIndicator = tileIndicator.GetComponent<EnemyTileIndicator>();
 				//Add tile to list.		
@@ -190,8 +285,9 @@ public class Enemy : Entity
 				{
 					if (playerController.position == TerrainGenerator.WorldToGrid(tileIndicator.transform.position))
 					{
-						playerController.ChangeHealth(-PlayerController.maxHealth);
-						playerController.MoveToTile(new Position(playerController.position.X, playerController.position.Y + 1));
+						animator.Play("PushUp");
+						AudioManager.instance.PlayOneShot((int)AudioManager.SFXClips.EnemyPush);
+						StartCoroutine(playerController.PushedIntoLava(new Position(playerController.position.X, playerController.position.Y + 1)));
 					}
 				});
 			}
@@ -199,7 +295,7 @@ public class Enemy : Entity
 			{
 				//Spawn tile on player.
 				GameObject tileIndicator = Instantiate(enemyMeleeTileIndicatorPrefab);
-				tileIndicator.transform.parent = this.transform;
+				tileIndicator.transform.parent = transform.parent.transform;
 				tileIndicator.transform.position = TerrainGenerator.GridToWorld(a_playerController.position);
 				EnemyTileIndicator enemyTileIndicator = tileIndicator.GetComponent<EnemyTileIndicator>();
 				//Add tile to list.		
@@ -210,6 +306,11 @@ public class Enemy : Entity
 					if (playerController.position == TerrainGenerator.WorldToGrid(tileIndicator.transform.position))
 					{
 						playerController.ChangeHealth(-1);
+						animator.Play("Melee");
+						AudioManager.instance.PlayOneShot((int)AudioManager.SFXClips.EnemyMelee);
+						GameObject meleeEffect = Instantiate(meleeAttackEffect);
+						meleeEffect.transform.position = TerrainGenerator.GridToWorld(playerController.position);
+						Destroy(meleeEffect, 1f);
 					}
 				});
 			}
@@ -237,7 +338,7 @@ public class Enemy : Entity
 			{
 				//Spawn tile on player.
 				GameObject tileIndicator = Instantiate(enemyPushTileIndicatorPrefab);
-				tileIndicator.transform.parent = this.transform;
+				tileIndicator.transform.parent = transform.parent.transform;
 				tileIndicator.transform.position = TerrainGenerator.GridToWorld(a_playerController.position);
 				EnemyTileIndicator enemyTileIndicator = tileIndicator.GetComponent<EnemyTileIndicator>();
 				//Add tile to list.		
@@ -247,8 +348,9 @@ public class Enemy : Entity
 				{
 					if (playerController.position == TerrainGenerator.WorldToGrid(tileIndicator.transform.position))
 					{
-						playerController.ChangeHealth(-PlayerController.maxHealth);
-						playerController.MoveToTile(new Position(playerController.position.X + 1, playerController.position.Y));
+						animator.Play("PushRight");
+						AudioManager.instance.PlayOneShot((int)AudioManager.SFXClips.EnemyPush);
+						StartCoroutine(playerController.PushedIntoLava(new Position(playerController.position.X + 1, playerController.position.Y)));
 					}
 				});
 			}
@@ -256,7 +358,7 @@ public class Enemy : Entity
 			{
 				//Spawn tile on player.
 				GameObject tileIndicator = Instantiate(enemyMeleeTileIndicatorPrefab);
-				tileIndicator.transform.parent = this.transform;
+				tileIndicator.transform.parent = transform.parent.transform;
 				tileIndicator.transform.position = TerrainGenerator.GridToWorld(a_playerController.position);
 				EnemyTileIndicator enemyTileIndicator = tileIndicator.GetComponent<EnemyTileIndicator>();
 				//Add tile to list.		
@@ -267,6 +369,11 @@ public class Enemy : Entity
 					if (playerController.position == TerrainGenerator.WorldToGrid(tileIndicator.transform.position))
 					{
 						playerController.ChangeHealth(-1);
+						animator.Play("Melee");
+						AudioManager.instance.PlayOneShot((int)AudioManager.SFXClips.EnemyMelee);
+						GameObject meleeEffect = Instantiate(meleeAttackEffect);
+						meleeEffect.transform.position = TerrainGenerator.GridToWorld(playerController.position);
+						Destroy(meleeEffect, 1f);
 					}
 				});
 			}
@@ -294,7 +401,7 @@ public class Enemy : Entity
 			{
 				//Spawn tile on player.
 				GameObject tileIndicator = Instantiate(enemyPushTileIndicatorPrefab);
-				tileIndicator.transform.parent = this.transform;
+				tileIndicator.transform.parent = transform.parent.transform;
 				tileIndicator.transform.position = TerrainGenerator.GridToWorld(a_playerController.position);
 				EnemyTileIndicator enemyTileIndicator = tileIndicator.GetComponent<EnemyTileIndicator>();
 				//Add tile to list.		
@@ -304,8 +411,9 @@ public class Enemy : Entity
 				{
 					if (playerController.position == TerrainGenerator.WorldToGrid(tileIndicator.transform.position))
 					{
-						playerController.ChangeHealth(-PlayerController.maxHealth);
-						playerController.MoveToTile(new Position(playerController.position.X - 1, playerController.position.Y));
+						animator.Play("PushLeft");
+						AudioManager.instance.PlayOneShot((int)AudioManager.SFXClips.EnemyPush);
+						StartCoroutine(playerController.PushedIntoLava(new Position(playerController.position.X - 1, playerController.position.Y)));
 					}
 				});
 			}
@@ -313,7 +421,7 @@ public class Enemy : Entity
 			{
 				//Spawn tile on player.
 				GameObject tileIndicator = Instantiate(enemyMeleeTileIndicatorPrefab);
-				tileIndicator.transform.parent = this.transform;
+				tileIndicator.transform.parent = transform.parent.transform;
 				tileIndicator.transform.position = TerrainGenerator.GridToWorld(a_playerController.position);
 				EnemyTileIndicator enemyTileIndicator = tileIndicator.GetComponent<EnemyTileIndicator>();
 				//Add tile to list.		
@@ -324,6 +432,11 @@ public class Enemy : Entity
 					if (playerController.position == TerrainGenerator.WorldToGrid(tileIndicator.transform.position))
 					{
 						playerController.ChangeHealth(-1);
+						animator.Play("Melee");
+						AudioManager.instance.PlayOneShot((int)AudioManager.SFXClips.EnemyMelee);
+						GameObject meleeEffect = Instantiate(meleeAttackEffect);
+						meleeEffect.transform.position = TerrainGenerator.GridToWorld(playerController.position);
+						Destroy(meleeEffect, 1f);
 					}
 				});
 			}
@@ -354,27 +467,50 @@ public class Enemy : Entity
 	}
 
 	/// <summary>
-	/// Changes the health of the player.
+	/// Changes the health of the enemy.
 	/// </summary>
 	/// <param name="healthChange">How much to change the health by.</param>
-	public void ChangeHealth(int healthChange)
+	/// <param name="inLava">If the enemy died in lava.</param>
+	public void ChangeHealth(int healthChange, bool inLava = false)
 	{
 		health += healthChange;
 		if (health <= 0)
 		{
+			AudioManager.instance.PlayOneShot((int)AudioManager.SFXClips.DrawCard);
 			cardHandler.DrawCard();
 			PlayerData.Instance.IncreaseScore(1);
-			//Die.
-			EnemyHandler.enemies.Remove(this);
-			TerrainGenerator.grid.UnblockCell(position);
+
+			if (!inLava)
+			{
+				//Die.
+				EnemyHandler.enemies.Remove(this);
+				TerrainGenerator.grid.UnblockCell(position);
+				animator.Play("Die");
+				AudioManager.instance.PlayOneShot((int)AudioManager.SFXClips.EnemyDie);
+			}
+			else
+			{
+				AudioManager.instance.PlayOneShot((int)AudioManager.SFXClips.Lava);
+			}
+
+			for (int i = enemyTileIndicators.Count - 1; i > -1; i--)
+			{
+				//Delete the tile
+				Destroy(enemyTileIndicators[i].gameObject);
+			}
 
 			if (EnemyHandler.enemies.Count == 0)
 			{
 				PlayerData.NextFloor();
 			}
 
-			Destroy(this.gameObject);
+			Destroy(this.gameObject, 1f);
 		}
+		else if (healthChange < 0)
+		{
+			AudioManager.instance.PlayOneShot((int)AudioManager.SFXClips.EnemyTakeDamage);
+		}
+
 		if (health > maxHealth)
 		{
 			health = maxHealth;
@@ -389,16 +525,59 @@ public class Enemy : Entity
 	/// <param name="positionToMoveTo">The tile to move the enemy to.</param>
 	public void PushedToTile(Position positionToMoveTo)
 	{
+		//In lava.
 		if (TerrainGenerator.grid.GetCellCost(positionToMoveTo) > 1)
 		{
-			//In Lava
-			MoveToTile(positionToMoveTo);
-			ChangeHealth(-maxHealth);
+			//If the grid is cell blocked unblock.
+			if (TerrainGenerator.grid.GetCellCost(position) > 1)
+			{
+				TerrainGenerator.grid.UnblockCell(position);
+			}
+
+			//Block the new tile
+			TerrainGenerator.grid.BlockCell(positionToMoveTo);
+
+			for (int i = enemyTileIndicators.Count - 1; i > -1; i--)
+			{
+				//Get the tile gameobject to delete before removing it from the list.
+				GameObject enemyTileIndicatorToDelete = enemyTileIndicators[i].gameObject;
+
+				//Remove from list.
+				enemyTileIndicators.RemoveAt(i);
+
+				//Delete the tile
+				Destroy(enemyTileIndicatorToDelete);
+			}
+
+			position = positionToMoveTo;
+			StartCoroutine(PushAnim(true));
 		}
-		else
+		else//On a tile.
 		{
-			//On a tile
-			MoveToTile(positionToMoveTo);
+			//If the grid is cell blocked unblock.
+			if (TerrainGenerator.grid.GetCellCost(position) > 1)
+			{
+				TerrainGenerator.grid.UnblockCell(position);
+			}
+
+			//Block the new tile
+			TerrainGenerator.grid.BlockCell(positionToMoveTo);
+
+			position = positionToMoveTo;
+
+			for (int i = enemyTileIndicators.Count - 1; i > -1; i--)
+			{
+				//Get the tile gameobject to delete before removing it from the list.
+				GameObject enemyTileIndicatorToDelete = enemyTileIndicators[i].gameObject;
+
+				//Remove from list.
+				enemyTileIndicators.RemoveAt(i);
+
+				//Delete the tile
+				Destroy(enemyTileIndicatorToDelete);
+			}
+
+			StartCoroutine(PushAnim());
 		}
 	}
 	#endregion

@@ -109,10 +109,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e95ccfefaea8c049a8528beaaaf322b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  cardActivated: 0
   cardHandler: {fileID: 0}
+  actionHandler: {fileID: 0}
   canvas: {fileID: 0}
   cardOutlineImage: {fileID: 0}
   cardOulineActivatedTransform: {fileID: 0}
+  cardOulineDeactivatedTransform: {fileID: 0}
   card: {fileID: 0}
 --- !u!1 &2507389608536249326
 GameObject:

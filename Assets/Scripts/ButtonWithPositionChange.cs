@@ -52,6 +52,7 @@ public class ButtonWithPositionChange : Button
 		CardMover.moving = false;
 		base.OnPointerUp(eventData);
 		transform.position -= positionChange;
+		AudioManager.instance.PlayOneShot((int)AudioManager.SFXClips.Button);
 	}
 	#endregion
 	#endregion

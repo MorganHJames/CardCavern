@@ -5,6 +5,7 @@
 // Brief: Handles the game over events.
 //////////////////////////////////////////////////////////// 
 
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -29,24 +30,6 @@ public class GameOverHandler : MonoBehaviour
 	[SerializeField] private ButtonWithPositionChange menuButton;
 
 	/// <summary>
-	/// The end run button.
-	/// </summary>
-	[Tooltip("The end run button.")]
-	[SerializeField] private ButtonWithPositionChange endRunButton;
-
-	/// <summary>
-	/// The settings button.
-	/// </summary>
-	[Tooltip("The settings button.")]
-	[SerializeField] private ButtonWithPositionChange settingsButton;
-
-	/// <summary>
-	/// The return from settings button.
-	/// </summary>
-	[Tooltip("The return from settings button.")]
-	[SerializeField] private ButtonWithPositionChange returnFromSettingsButton;
-
-	/// <summary>
 	/// The score value.
 	/// </summary>
 	[Tooltip("The score value.")]
@@ -59,10 +42,9 @@ public class GameOverHandler : MonoBehaviour
 	[SerializeField] private TextMeshProUGUI highScoreValueText;
 
 	/// <summary>
-	/// The settings panel game object.
+	/// The animator.
 	/// </summary>
-	[Tooltip("TThe settings panel game object.")]
-	[SerializeField] private GameObject settingsPanel;
+	private Animator animator;
 	#endregion
 	#region Public
 
@@ -76,9 +58,7 @@ public class GameOverHandler : MonoBehaviour
 	/// </summary>
 	private void Start()
 	{
-		endRunButton.onClick.AddListener(Menu);
-		settingsButton.onClick.AddListener(OpenSettings);
-		returnFromSettingsButton.onClick.AddListener(ReturnFromSettings);
+		animator = GetComponent<Animator>();
 		gameObject.SetActive(false);
 	}
 
@@ -90,31 +70,11 @@ public class GameOverHandler : MonoBehaviour
 		CardMover.canMove = true;
 		CardMover.moving = false;
 		PlayerData.score = 0;
+		PlayerData.floor = 1;
 		PlayerData.playerHealth = PlayerController.maxHealth;
 		PlayerData.cards = new Card[0];
 		SceneManager.LoadScene("BaseScene", LoadSceneMode.Single);
-	}
-
-	/// <summary>
-	/// Opens the settings panel.
-	/// </summary>
-	private void OpenSettings()
-	{
-		settingsButton.transform.parent.gameObject.SetActive(false);
-		settingsPanel.SetActive(true);
-		CardMover.canMove = false;
-		CardMover.moving = true;
-	}
-
-	/// <summary>
-	/// Closes the settings panel.
-	/// </summary>
-	private void ReturnFromSettings()
-	{
-		settingsButton.transform.parent.gameObject.SetActive(true);
-		settingsPanel.SetActive(false);
-		CardMover.canMove = true;
-		CardMover.moving = false;
+		UnityAdManager.Instance.ShowRegularAd();
 	}
 
 	/// <summary>
@@ -125,16 +85,18 @@ public class GameOverHandler : MonoBehaviour
 		CardMover.canMove = true;
 		CardMover.moving = false;
 		PlayerData.score = 0;
+		PlayerData.floor = 1;
 		PlayerData.playerHealth = PlayerController.maxHealth;
 		PlayerData.cards = new Card[0];
 		SceneManager.LoadScene("MenuScene", LoadSceneMode.Single);
+		UnityAdManager.Instance.ShowRegularAd();
 	}
 	#endregion
 	#region Public
 	/// <summary>
 	/// Activates the Game Over Screen.
 	/// </summary>
-	public void ActiveGameOverScreen()
+	public IEnumerator ActiveGameOverScreen()
 	{
 		replayButton.onClick.AddListener(Replay);
 		menuButton.onClick.AddListener(Menu);
@@ -144,8 +106,13 @@ public class GameOverHandler : MonoBehaviour
 
 		CardMover.canMove = false;
 		CardMover.moving = true;
+
+		yield return new WaitForSeconds(1f);
+
+		AudioManager.instance.PlayOneShot((int)AudioManager.SFXClips.GameOver);
 		//Check highscore
 		gameObject.SetActive(true);
+		animator.Play("GameOver");
 	}
 	#endregion
 	#endregion

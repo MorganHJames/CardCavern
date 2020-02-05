@@ -33,6 +33,17 @@ public class EnemyHandler : MonoBehaviour
 	#region Methods
 	#region Private
 	/// <summary>
+	/// Used for debugging going to the next level.
+	/// </summary>
+	private void Update()
+	{
+		//if (Input.GetKeyDown(KeyCode.Space))
+		//{
+		//	enemies[0].ChangeHealth(-55);
+		//}
+	}
+
+	/// <summary>
 	/// Invokes the enemy check.
 	/// </summary>
 	private void Start()
@@ -83,7 +94,10 @@ public class EnemyHandler : MonoBehaviour
 				EnemyTileIndicator enemyTileIndicator = ActionHandler.damageIndicators[i];
 				enemyTileIndicator.ActivateAction();
 				ActionHandler.damageIndicators.Remove(enemyTileIndicator);
-				Destroy(enemyTileIndicator.gameObject);
+				if (enemyTileIndicator && enemyTileIndicator.gameObject)
+				{
+					Destroy(enemyTileIndicator.gameObject);
+				}
 			}
 		}
 	}

@@ -97,6 +97,16 @@ public class CardMover : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, 
 			moving = true;
 		}
 	}
+
+	/// <summary>
+	/// Sets the color of the outline to be opaque.
+	/// </summary>
+	private void Start()
+	{
+		transform.localScale = new Vector3(1f, 1f);
+		StartCoroutine(cardHandler.UpdateRotationAndPosition());
+		cardOutlineImage.color = new Color(1f, 1f, 1f, 0f);
+	}
 	#endregion
 	#region Public
 	/// <summary>
@@ -108,7 +118,7 @@ public class CardMover : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, 
 		if (canMove || (discarding && !cardActivated))
 		{
 			RectTransformUtility.ScreenPointToLocalPointInRectangle(canvas.transform as RectTransform, Input.mousePosition, canvas.worldCamera, out target);
-			transform.position = canvas.transform.TransformPoint(target);
+			transform.position = canvas.transform.TransformPoint(new Vector2(target.x, target.y + 100f));
 			cardOutlineImage.color = new Color(1f, 1f, 1f, 100f / Vector3.Distance(cardOutlineImage.transform.position, transform.position));
 		}
 	}
@@ -135,7 +145,7 @@ public class CardMover : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, 
 	{
 		if (canMove || (discarding && !cardActivated))
 		{
-			if (50f > Vector3.Distance(cardOutlineImage.transform.position, transform.position))
+			if (75f > Vector3.Distance(cardOulineDeactivatedTransform.position, transform.position))
 			{
 				if (canMove && !discarding)
 				{
@@ -148,7 +158,9 @@ public class CardMover : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, 
 				}
 				else
 				{
+					cardOutlineImage.color = new Color(1f, 1f, 1f, 0f);
 					transform.position = cardOulineDeactivatedTransform.transform.position;
+					AudioManager.instance.PlayOneShot((int)AudioManager.SFXClips.Discard);
 					cardHandler.RemoveCard(gameObject);
 				}
 			}

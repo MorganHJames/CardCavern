@@ -19,26 +19,6 @@ MonoBehaviour:
   m_DefaultColliderType: 0
   m_TilingRules:
   - m_Neighbors: 0000000000000000000000000000000000000000000000000000000000000000
-    m_SiblingNeighbors: 0200000001000000020000000000000000000000000000000000000000000000
-    m_Sprites:
-    - {fileID: 21300506, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
-    - {fileID: 21300508, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
-    - {fileID: 21300510, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
-    - {fileID: 21300512, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
-    - {fileID: 21300514, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
-    - {fileID: 21300512, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
-    - {fileID: 21300510, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
-    - {fileID: 21300508, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
-    m_GameObject: {fileID: 0}
-    m_SiblingTile: {fileID: 11400000, guid: 096be9224f589f144a1d629c03b3b3a9, type: 2}
-    m_AnimationSpeed: 7.5
-    m_PerlinScale: 0.5
-    m_RuleTransform: 0
-    m_Output: 2
-    m_ColliderType: 1
-    m_RandomTransform: 0
-    m_CheckSiblings: 1
-  - m_Neighbors: 0000000000000000000000000000000000000000000000000000000000000000
     m_SiblingNeighbors: 0200000001000000000000000000000000000000000000000000000000000000
     m_Sprites:
     - {fileID: 21300496, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
@@ -49,6 +29,26 @@ MonoBehaviour:
     - {fileID: 21300502, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
     - {fileID: 21300500, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
     - {fileID: 21300498, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
+    m_GameObject: {fileID: 0}
+    m_SiblingTile: {fileID: 11400000, guid: 096be9224f589f144a1d629c03b3b3a9, type: 2}
+    m_AnimationSpeed: 7.5
+    m_PerlinScale: 0.5
+    m_RuleTransform: 0
+    m_Output: 2
+    m_ColliderType: 1
+    m_RandomTransform: 0
+    m_CheckSiblings: 1
+  - m_Neighbors: 0000000000000000000000000000000000000000000000000000000000000000
+    m_SiblingNeighbors: 0200000001000000020000000000000000000000000000000000000000000000
+    m_Sprites:
+    - {fileID: 21300506, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
+    - {fileID: 21300508, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
+    - {fileID: 21300510, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
+    - {fileID: 21300512, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
+    - {fileID: 21300514, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
+    - {fileID: 21300512, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
+    - {fileID: 21300510, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
+    - {fileID: 21300508, guid: c68553cf066769247a7000ecaaf12c16, type: 3}
     m_GameObject: {fileID: 0}
     m_SiblingTile: {fileID: 11400000, guid: 096be9224f589f144a1d629c03b3b3a9, type: 2}
     m_AnimationSpeed: 7.5

@@ -136,6 +136,7 @@ public class CardHandler : MonoBehaviour
 	#region Private
 	/// <summary>
 	/// When adding a card to the card pool update the total weight.
+	/// This does not get called in builds!
 	/// </summary>
 	private void OnValidate()
 	{
@@ -149,11 +150,28 @@ public class CardHandler : MonoBehaviour
 		}
 	}
 
+	private void Update()
+	{
+		if (Input.GetKeyDown(KeyCode.Space))
+		{
+			RemoveCard(transform.GetChild(0).gameObject);
+		}
+	}
+
 	/// <summary>
 	/// Gets the components needed and updates the rotation and position of the cards in the players hand on start.
 	/// </summary>
 	private void Start()
 	{
+		if (cardPool != null)
+		{
+			totalCardPoolWeight = 0f;
+			foreach (CardWithWeight cardWithWeight in cardPool)
+			{
+				totalCardPoolWeight += cardWithWeight.weight;
+			}
+		}
+
 		gridLayoutGroup = GetComponent<GridLayoutGroup>();
 
 		if (PlayerData.cards.Length == 0)
@@ -185,6 +203,7 @@ public class CardHandler : MonoBehaviour
 	{
 		//Pick a random card based on weight.
 		//Generate a random position in the list.
+		Random.InitState((int)System.DateTime.Now.Ticks);
 		float pick = Random.value * totalCardPoolWeight;
 		int chosenIndex = 0;
 		float cumulativeWeight = cardPool[0].weight;
@@ -384,14 +403,13 @@ public class CardHandler : MonoBehaviour
 	{
 		//Destroy card.
 		Destroy(cardGameObject);
-
-		if (!(transform.childCount > maxHandSize + 1))
+		if (transform.childCount <= maxHandSize)
 		{
 			StopDiscarding();
 		}
 
 		//If no cards == die;
-		if (transform.childCount == 0)
+		if (transform.childCount - 1 == 0)
 		{
 			terrainGenerator.playerController.ChangeHealth(-PlayerController.maxHealth);
 		}

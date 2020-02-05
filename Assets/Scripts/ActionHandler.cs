@@ -42,6 +42,24 @@ public class ActionHandler : MonoBehaviour
 	[SerializeField] private CardHandler cardHandler;
 
 	/// <summary>
+	/// The melee attack effect.
+	/// </summary>
+	[Tooltip("The melee attack effect.")]
+	[SerializeField] private GameObject meleeAttackEffect;
+
+	/// <summary>
+	/// The bomb explode effect.
+	/// </summary>
+	[Tooltip("The bomb explode effect.")]
+	[SerializeField] private GameObject bombExplodeEffect;
+
+	/// <summary>
+	/// The boomerang effect.
+	/// </summary>
+	[Tooltip("The boomerang effect.")]
+	[SerializeField] private GameObject boomerangEffect;
+
+	/// <summary>
 	/// The card outline image.
 	/// </summary>
 	[Tooltip("The card outline image.")]
@@ -124,6 +142,7 @@ public class ActionHandler : MonoBehaviour
 	/// <param name="a_cardGameObject">The game object of the card.</param>
 	public void CardActivated(Card a_activatedCard, GameObject a_cardGameObject)
 	{
+		AudioManager.instance.PlayOneShot((int)AudioManager.SFXClips.CardActivated);
 		tempCard = a_activatedCard.CopyCard();
 		activatedCard = a_activatedCard;
 		cardGameObject = a_cardGameObject;
@@ -151,6 +170,7 @@ public class ActionHandler : MonoBehaviour
 		}
 		else
 		{
+			yield return new WaitForSeconds(0.25f);
 			//If no actions left to complete.
 			AllActionsComplete();
 		}
@@ -165,6 +185,7 @@ public class ActionHandler : MonoBehaviour
 		switch (action.actionType)
 		{
 			case ActionTypes.MELEE:
+				AudioManager.instance.PlayOneShot((int)AudioManager.SFXClips.TileSpawn);
 				//Spawn a melee indicator above, below, to the left and to the right of the player.
 				SpawnAttackIndicator(new Position(terrainGenerator.playerController.position.X, terrainGenerator.playerController.position.Y + 1), action.amount, meleeTileIndicatorPrefab);
 				SpawnAttackIndicator(new Position(terrainGenerator.playerController.position.X, terrainGenerator.playerController.position.Y - 1), action.amount, meleeTileIndicatorPrefab);
@@ -173,6 +194,8 @@ public class ActionHandler : MonoBehaviour
 				break;
 			case ActionTypes.HEAL:
 				terrainGenerator.playerController.ChangeHealth(action.amount);
+				AudioManager.instance.PlayOneShot((int)AudioManager.SFXClips.Heal);
+				terrainGenerator.playerController.animator.Play("HealthPotion");
 				CompleteAction();
 				break;
 			case ActionTypes.BOMB:
@@ -192,6 +215,7 @@ public class ActionHandler : MonoBehaviour
 				CompleteAction();
 				break;
 			case ActionTypes.RANGE:
+				AudioManager.instance.PlayOneShot((int)AudioManager.SFXClips.TileSpawn);
 				//Spawn a boomerang indicators a tile away above, below, to the left and to the right of the player.
 				SpawnAttackIndicator(new Position(terrainGenerator.playerController.position.X, terrainGenerator.playerController.position.Y + 2), action.amount, boomerangTileIndicatorPrefab);
 				SpawnAttackIndicator(new Position(terrainGenerator.playerController.position.X, terrainGenerator.playerController.position.Y - 2), action.amount, boomerangTileIndicatorPrefab);
@@ -234,8 +258,7 @@ public class ActionHandler : MonoBehaviour
 										tileIndicators.Add(walkableTileIndicator);
 										walkableTileIndicator.GetComponent<TileIndicator>().mouseUpEvent.AddListener(() => 
 										{
-											terrainGenerator.playerController.MoveToTile(position);
-											CompleteAction();
+											StartCoroutine(terrainGenerator.playerController.WalkToTile(path, position, CompleteAction));
 										});
 										positionsWithIndicators.Add(position);
 									}
@@ -252,15 +275,22 @@ public class ActionHandler : MonoBehaviour
 				{
 					CompleteAction();
 				}
+				else
+				{
+					AudioManager.instance.PlayOneShot((int)AudioManager.SFXClips.TileSpawn);
+				}
 				break;
 			case ActionTypes.DRAW:
 				for (int i = 0; i < action.amount; i++)
 				{
 					cardHandler.DrawCard();
+					AudioManager.instance.PlayOneShot((int)AudioManager.SFXClips.DrawCard, i * 0.05f);
 				}
+				terrainGenerator.playerController.animator.Play("Draw");
 				CompleteAction();
 				break;
 			case ActionTypes.PUSH:
+				AudioManager.instance.PlayOneShot((int)AudioManager.SFXClips.TileSpawn);
 				//Spawn a push indicator above, below, to the left and to the right of the player.
 				SpawnPushIndicator(new Position(terrainGenerator.playerController.position.X, terrainGenerator.playerController.position.Y + 1), action.amount);
 				SpawnPushIndicator(new Position(terrainGenerator.playerController.position.X, terrainGenerator.playerController.position.Y - 1), action.amount);
@@ -286,6 +316,21 @@ public class ActionHandler : MonoBehaviour
 		tileIndicators.Add(tileIndicator);
 		tileIndicator.GetComponent<TileIndicator>().mouseUpEvent.AddListener(() =>
 		{
+			if (tileIndicatorPrefab == meleeTileIndicatorPrefab)
+			{
+				terrainGenerator.playerController.animator.Play("Melee");
+				AudioManager.instance.PlayOneShot((int)AudioManager.SFXClips.Melee);
+			}
+			else if (tileIndicatorPrefab == boomerangTileIndicatorPrefab)
+			{
+				GameObject throwEffect = Instantiate(boomerangEffect);
+				throwEffect.transform.position = TerrainGenerator.GridToWorld(terrainGenerator.playerController.position);
+				Boomerang boomerang = throwEffect.GetComponent<Boomerang>();
+				boomerang.playerLocation = terrainGenerator.playerController.transform;
+				boomerang.target = tileIndicator.transform.position;
+				AudioManager.instance.PlayOneShot((int)AudioManager.SFXClips.Boomerang);
+			}
+
 			//If enemy in enemy list position is same as position passed in.
 			foreach (Enemy enemy in EnemyHandler.enemies)
 			{
@@ -293,6 +338,13 @@ public class ActionHandler : MonoBehaviour
 				{
 					//Hurt enemy.
 					enemy.ChangeHealth(-healthChangeAmount);
+
+					if (tileIndicatorPrefab == meleeTileIndicatorPrefab)
+					{
+						GameObject meleeEffect = Instantiate(meleeAttackEffect);
+						meleeEffect.transform.position = TerrainGenerator.GridToWorld(position);
+						Destroy(meleeEffect, 1f);
+					}
 
 					//Early out.
 					break;
@@ -315,8 +367,21 @@ public class ActionHandler : MonoBehaviour
 		damageIndicator.transform.position = TerrainGenerator.GridToWorld(position);
 		EnemyTileIndicator enemyTileIndicator = damageIndicator.GetComponent<EnemyTileIndicator>();
 		damageIndicators.Add(enemyTileIndicator);
+
+		if (indicator == bombTileIndicatorPrefab)
+		{
+			AudioManager.instance.PlayOneShot((int)AudioManager.SFXClips.BombDrop);
+		}
+
 		enemyTileIndicator.action.AddListener(() =>
 		{
+			if (indicator == bombTileIndicatorPrefab)
+			{
+				GameObject explodeEffect = Instantiate(bombExplodeEffect);
+				explodeEffect.transform.position = TerrainGenerator.GridToWorld(position);
+				AudioManager.instance.PlayOneShot((int)AudioManager.SFXClips.BombExplode);
+				Destroy(explodeEffect, 1f);
+			}
 			for (int i = EnemyHandler.enemies.Count - 1; i > -1; i--)
 			{
 				if (EnemyHandler.enemies[i].position == position)
@@ -349,6 +414,7 @@ public class ActionHandler : MonoBehaviour
 			{
 				if (enemy.position == position)
 				{
+					AudioManager.instance.PlayOneShot((int)AudioManager.SFXClips.Push);
 					if (position == new Position(terrainGenerator.playerController.position.X, terrainGenerator.playerController.position.Y + 1))
 					{
 						//Push enemy up.
@@ -361,7 +427,11 @@ public class ActionHandler : MonoBehaviour
 								if (badGuy.position == new Position(position.X, position.Y + i))
 								{
 									//Push to tile before.
-									enemy.PushedToTile(new Position(position.X, position.Y + i - 1));
+									if (i != 1)
+									{
+										terrainGenerator.playerController.animator.Play("PushUp");
+										enemy.PushedToTile(new Position(position.X, position.Y + i - 1));
+									}
 									pushed = true;
 									break;
 								}
@@ -373,6 +443,7 @@ public class ActionHandler : MonoBehaviour
 						}
 						if (!pushed)
 						{
+							terrainGenerator.playerController.animator.Play("PushUp");
 							enemy.PushedToTile(new Position(position.X, position.Y + pushDistance));
 						}
 					}
@@ -387,6 +458,7 @@ public class ActionHandler : MonoBehaviour
 								//If enemy on tile getting pushed passed.
 								if (badGuy.position == new Position(position.X, position.Y - i))
 								{
+									terrainGenerator.playerController.animator.Play("PushDown");
 									//Push to tile before.
 									enemy.PushedToTile(new Position(position.X, position.Y - i + 1));
 									pushed = true;
@@ -400,6 +472,7 @@ public class ActionHandler : MonoBehaviour
 						}
 						if (!pushed)
 						{
+							terrainGenerator.playerController.animator.Play("PushDown");
 							enemy.PushedToTile(new Position(position.X, position.Y - pushDistance));
 						}
 					}
@@ -414,6 +487,7 @@ public class ActionHandler : MonoBehaviour
 								//If enemy on tile getting pushed passed.
 								if (badGuy.position == new Position(position.X + i, position.Y))
 								{
+									terrainGenerator.playerController.animator.Play("PushRight");
 									//Push to tile before.
 									enemy.PushedToTile(new Position(position.X + i - 1, position.Y));
 									pushed = true;
@@ -427,6 +501,7 @@ public class ActionHandler : MonoBehaviour
 						}
 						if (!pushed)
 						{
+							terrainGenerator.playerController.animator.Play("PushRight");
 							enemy.PushedToTile(new Position(position.X + pushDistance, position.Y));
 						}
 					}
@@ -441,6 +516,7 @@ public class ActionHandler : MonoBehaviour
 								//If enemy on tile getting pushed passed.
 								if (badGuy.position == new Position(position.X - i, position.Y))
 								{
+									terrainGenerator.playerController.animator.Play("PushLeft");
 									//Push to tile before.
 									enemy.PushedToTile(new Position(position.X - i + 1, position.Y));
 									pushed = true;
@@ -454,6 +530,7 @@ public class ActionHandler : MonoBehaviour
 						}
 						if (!pushed)
 						{
+							terrainGenerator.playerController.animator.Play("PushLeft");
 							enemy.PushedToTile(new Position(position.X - pushDistance, position.Y));
 						}
 					}
